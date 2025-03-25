@@ -30,6 +30,7 @@ import ClientJobPage from './pages/job';
 import ClientJobDetailPage from './pages/job/detail';
 import ClientCompanyPage from './pages/company';
 import ClientCompanyDetailPage from './pages/company/detail';
+import FaceIdLogin from './pages/auth/faceIdLogin';
 
 const LayoutClient = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -69,18 +70,18 @@ export default function App() {
   }, [])
 
   const router = createBrowserRouter([
-    {
-      path: "/",
-      element: (<LayoutApp><LayoutClient /></LayoutApp>),
-      errorElement: <NotFound />,
-      children: [
-        { index: true, element: <HomePage /> },
-        { path: "job", element: <ClientJobPage /> },
-        { path: "job/:id", element: <ClientJobDetailPage /> },
-        { path: "company", element: <ClientCompanyPage /> },
-        { path: "company/:id", element: <ClientCompanyDetailPage /> }
-      ],
-    },
+    // {
+    //   path: "/",
+    //   element: (<LayoutApp><LayoutClient /></LayoutApp>),
+    //   errorElement: <NotFound />,
+    //   children: [
+    //     { index: true, element: <HomePage /> },
+    //     { path: "job", element: <ClientJobPage /> },
+    //     { path: "job/:id", element: <ClientJobDetailPage /> },
+    //     { path: "company", element: <ClientCompanyPage /> },
+    //     { path: "company/:id", element: <ClientCompanyDetailPage /> }
+    //   ],
+    // },
 
     {
       path: "/admin",
@@ -156,6 +157,14 @@ export default function App() {
       path: "/register",
       element: <RegisterPage />,
     },
+    {
+      path: "/face-id-login",
+      element: <FaceIdLogin />,
+    },
+    {
+      path: "*",
+      element: <NotFound />,
+    }
   ]);
 
   return (

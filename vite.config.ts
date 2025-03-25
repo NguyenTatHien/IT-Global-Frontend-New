@@ -16,7 +16,7 @@ export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   return {
     plugins: [
-      react(), 
+      react(),
       // visualizer() as PluginOption
     ],
     server: {
