@@ -25,6 +25,7 @@ export interface IAccount {
             _id: string;
             name: string;
         }
+        faceDescriptor: number[];
         permissions: {
             _id: string;
             name: string;
@@ -64,11 +65,8 @@ export interface IUser {
         _id: string;
         name: string;
     }
-
-    company?: {
-        _id: string;
-        name: string;
-    }
+    image?: string;
+    faceDescriptor?: number[];
     createdBy?: string;
     isDeleted?: boolean;
     deletedAt?: boolean | null;

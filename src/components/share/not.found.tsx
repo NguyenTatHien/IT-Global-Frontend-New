@@ -9,7 +9,7 @@ const NotFound = () => {
     function checkAuth() {
         if (!isAuthenticated) {
             alert("Bạn chưa đăng nhập");
-            return navigate('/login');
+            return navigate('/face-id-login');
         } else {
             return navigate('/admin');
         }

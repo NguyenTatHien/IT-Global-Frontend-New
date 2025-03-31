@@ -10,8 +10,35 @@ export const callRegister = (name: string, email: string, password: string, age:
 }
 
 export const callLogin = (username: string, password: string) => {
-    return axios.post<IBackendRes<IAccount>>('/api/v1/auth/login', { username, password })
+    return axios.post<IBackendRes<IAccount>>('/api/v1/auth/login1', { username, password })
 }
+
+export const callLoginWithFaceId = (fileDescriptor: File) => {
+    const formData = new FormData();
+    formData.append('image', fileDescriptor);
+    return axios.post<IBackendRes<IAccount>>('/api/v1/auth/login', formData,
+        {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        }
+    )
+}
+
+export const callScanFace = async (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    return axios.post('/api/v1/face-recognition/scan', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+};
+
+// export const callLoginWithFaceId = (fileDescriptor: number[]) => {
+//     return axios.post<IBackendRes<IAccount>>('/api/v1/auth/login')
+// }
 
 export const callFetchAccount = () => {
     return axios.get<IBackendRes<IGetAccount>>('/api/v1/auth/account')
@@ -28,9 +55,9 @@ export const callLogout = () => {
 /**
  * Upload single file
  */
-export const callUploadSingleFile = (file: any, folderType: string) => {
+export const callUploadSingleFile = (file: File, folderType: string) => {
     const bodyFormData = new FormData();
-    bodyFormData.append('fileUpload', file);
+    bodyFormData.append('image', file);
     return axios<IBackendRes<{ fileName: string }>>({
         method: 'post',
         url: '/api/v1/files/upload',
@@ -74,13 +101,45 @@ export const callFetchCompanyById = (id: string) => {
  * 
 Module User
  */
-export const callCreateUser = (user: IUser) => {
-    return axios.post<IBackendRes<IUser>>('/api/v1/users', { ...user })
-}
+export const callCreateUser = (user: IUser, file: File) => {
+    const formData = new FormData();
+    formData.append("name", user.name);
+    formData.append("email", user.email);
+    formData.append("password", user.password || "");
+    formData.append("age", user.age.toString());
+    formData.append("gender", user.gender);
+    formData.append("address", user.address);
+    formData.append("role", user.role as any);
+    formData.append("image", file); // Gửi file ảnh với key 'image'
 
-export const callUpdateUser = (user: IUser, id: string) => {
-    return axios.patch<IBackendRes<IUser>>(`/api/v1/users/${id}`, { ...user })
-}
+    return axios.post<IBackendRes<IUser>>("/api/v1/users", formData, {
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+    });
+};
+
+export const callUpdateUser = (id: string, user: any, file?: File) => {
+    const formData = new FormData();
+
+    // Thêm các trường cần cập nhật vào FormData
+    for (const key in user) {
+        if (user.hasOwnProperty(key) && user[key] !== undefined) {
+            formData.append(key, user[key] as string);
+        }
+    }
+
+    // Nếu có file, thêm file vào FormData
+    if (file) {
+        formData.append("image", file); // Gửi file ảnh với key 'image'
+    }
+
+    return axios.patch<IBackendRes<IUser>>(`/api/v1/users/${id}`, formData, {
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+    });
+};
 
 export const callDeleteUser = (id: string) => {
     return axios.delete<IBackendRes<IUser>>(`/api/v1/users/${id}`);

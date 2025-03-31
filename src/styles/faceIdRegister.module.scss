@@ -1,4 +1,4 @@
-.faceIdLogin {
+.faceIdRegister {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -45,10 +45,16 @@
       }
   }
 
-  .loginButton {
+  .registerButton {
       width: 100%;
       height: 40px;
       font-size: 16px;
+  }
+
+  .successMessage {
+      margin-top: 16px;
+      font-size: 14px;
+      color: #52c41a;
   }
 
   .spinner {

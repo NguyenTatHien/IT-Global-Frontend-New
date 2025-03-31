@@ -31,6 +31,7 @@ import ClientJobDetailPage from './pages/job/detail';
 import ClientCompanyPage from './pages/company';
 import ClientCompanyDetailPage from './pages/company/detail';
 import FaceIdLogin from './pages/auth/faceIdLogin';
+import FaceIdRegister from './pages/auth/faceIdRegister';
 
 const LayoutClient = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -160,6 +161,10 @@ export default function App() {
     {
       path: "/face-id-login",
       element: <FaceIdLogin />,
+    },
+    {
+      path: "/face-id-register",
+      element: <FaceIdRegister />,
     },
     {
       path: "*",

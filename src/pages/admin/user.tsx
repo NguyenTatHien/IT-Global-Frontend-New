@@ -72,6 +72,22 @@ const UserPage = () => {
             dataIndex: 'email',
             sorter: true,
         },
+        {
+            title: 'FaceId',
+            dataIndex: 'image',
+            render: (text, record) => {
+                return record.image ? (
+                    <img
+                        src={`${import.meta.env.VITE_BACKEND_URL}/images/user/${record.image}`}
+                        alt="User Image"
+                        style={{ width: "100px", height: "auto", objectFit: "cover", borderRadius: "8px" }}
+                    />
+                ) : (
+                    <span>Không có ảnh</span>
+                );
+            },
+            hideInSearch: true,
+        },
 
         {
             title: 'CreatedAt',

@@ -1,62 +1,96 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '@/redux/hooks';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchAccount } from '@/redux/slice/accountSlide';
 import Webcam from 'react-webcam';
-import * as faceapi from 'face-api.js';
 import styles from '@/styles/faceIdLogin.module.scss';
+import { callLoginWithFaceId } from '@/config/api';
+import { Spin, Button, Typography, message } from 'antd';
+import { SmileOutlined, LoadingOutlined } from '@ant-design/icons';
+const { Title, Text } = Typography;
 
 const FaceIdLogin: React.FC = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const dispatch = useAppDispatch();
+    const isAuthenticated = useAppSelector(state => state.account.isAuthenticated);
     const webcamRef = useRef<Webcam>(null);
 
+    let location = useLocation();
+    let params = new URLSearchParams(location.search);
+    const callback = params?.get("callback");
+
+
     useEffect(() => {
-        const loadModels = async () => {
-            const MODEL_URL = "../../../public/models";
-            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-            await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-            await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-        };
+        //đã login => redirect to '/'
+        if (isAuthenticated) {
+            // navigate('/');
+            window.location.href = '/admin';
+        }
+    }, [])
 
-        loadModels();
-    }, []);
-
-    const handleFaceDetection = async () => {
+    const captureAndLogin = async () => {
         if (webcamRef.current) {
-            const video = webcamRef.current.video;
-            const detections = await faceapi.detectAllFaces(video!, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
+            setLoading(true);
+            const imageSrc = webcamRef.current.getScreenshot();
 
-            if (detections.length > 0) {
-                setIsAuthenticated(true);
-                dispatch(fetchAccount());
-                navigate('/admin');
+            if (imageSrc) {
+                const blob = await fetch(imageSrc).then((res) => res.blob());
+                const fileName = `face-${Date.now()}.jpg`;
+                const file = new File([blob], fileName, { type: 'image/jpeg' });
+
+                try {
+                    const response = await callLoginWithFaceId(file);
+                    if (response.data) {
+                        // Lưu token vào localStorage
+                        localStorage.setItem('access_token', response.data.access_token);
+                        message.success('Đăng nhập tài khoản thành công!');
+                        window.location.href = callback ? callback : '/admin';
+                    } else {
+                        alert('Xác thực Face ID thất bại. Vui lòng thử lại.');
+                    }
+                } catch (error) {
+                    console.error('Lỗi khi gọi API:', error);
+                    alert('Đã xảy ra lỗi trong quá trình xác thực.');
+                } finally {
+                    setLoading(false);
+                }
             } else {
-                alert('Xác thực Face ID thất bại. Vui lòng thử lại.');
+                alert('Không thể chụp ảnh. Vui lòng thử lại.');
+                setLoading(false);
             }
         }
     };
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            handleFaceDetection();
-        }, 3000);
-
-        return () => clearInterval(interval);
-    }, []);
-
     return (
         <div className={styles.faceIdLogin}>
-            <h1>Đăng nhập bằng Face ID</h1>
-            <Webcam
-                audio={false}
-                ref={webcamRef}
-                screenshotFormat="image/jpeg"
-                width={520}
-                height={440}
-            />
-            {!isAuthenticated && <p>Đang xác thực...</p>}
+            <div className={styles.container}>
+                <Title level={2} className={styles.title}>
+                    Đăng nhập bằng Face ID
+                </Title>
+                <Text className={styles.description}>
+                    Vui lòng nhìn vào camera để xác thực khuôn mặt của bạn.
+                </Text>
+                <div className={styles.webcamContainer}>
+                    <Webcam
+                        audio={false}
+                        ref={webcamRef}
+                        screenshotFormat="image/jpeg"
+                        className={styles.webcam}
+                    />
+                </div>
+                <Button
+                    type="primary"
+                    icon={loading ? <LoadingOutlined /> : <SmileOutlined />}
+                    onClick={captureAndLogin}
+                    disabled={loading}
+                    className={styles.loginButton}
+                >
+                    {loading ? 'Đang xác thực...' : 'Đăng nhập'}
+                </Button>
+                {loading && (
+                    <Spin tip="Đang xử lý..." className={styles.spinner} />
+                )}
+            </div>
         </div>
     );
 };

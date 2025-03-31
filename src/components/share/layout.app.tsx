@@ -20,7 +20,7 @@ const LayoutApp = (props: IProps) => {
             localStorage.removeItem('access_token')
             message.error(errorRefreshToken);
             dispatch(setRefreshTokenAction({ status: false, message: "" }))
-            navigate('/login');
+            navigate('/face-id-login');
         }
     }, [isRefreshToken]);
 
