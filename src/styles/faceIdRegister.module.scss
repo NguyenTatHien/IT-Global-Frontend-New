@@ -1,63 +1,177 @@
 .faceIdRegister {
+  min-height: 100vh;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  height: 100vh;
-  background: linear-gradient(135deg, #f0f2f5, #ffffff);
+  justify-content: center;
+  padding: 20px;
+  background-color: #f0f2f5;
 
   .container {
-      text-align: center;
-      background: #fff;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      max-width: 400px;
-      width: 100%;
+    max-width: 800px;
+    width: 100%;
+    background: white;
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
   .title {
-      color: #1890ff;
-      margin-bottom: 16px;
+    text-align: center;
+    margin-bottom: 24px;
+    color: #1890ff;
+  }
+
+  .steps {
+    margin-bottom: 32px;
+  }
+
+  .form {
+    margin-top: 24px;
   }
 
   .description {
-      font-size: 14px;
-      color: #595959;
-      margin-bottom: 24px;
+    display: block;
+    margin-bottom: 24px;
+    text-align: center;
+    color: #666;
+
+    ul {
+      text-align: left;
+      margin-top: 16px;
+      padding-left: 24px;
+      
+      li {
+        margin-bottom: 8px;
+        color: #666;
+      }
+    }
   }
 
   .webcamContainer {
-      margin-bottom: 24px;
-      border: 2px dashed #d9d9d9;
-      border-radius: 8px;
-      overflow: hidden;
-      width: 100%;
-      height: 300px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #fafafa;
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    height: 480px;
+    margin: 0 auto;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: #000;
 
-      .webcam {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-      }
+    .webcam {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      height: 400px;
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      border-radius: 8px;
+      pointer-events: none;
+    }
+  }
+
+  .errorAlert {
+    margin: 16px 0;
+  }
+
+  .buttonContainer {
+    display: flex;
+    justify-content: center;
+    margin-top: 24px;
+    gap: 16px;
   }
 
   .registerButton {
-      width: 100%;
-      height: 40px;
-      font-size: 16px;
+    min-width: 120px;
+    height: 40px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  .loadingContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 16px;
   }
 
   .successMessage {
-      margin-top: 16px;
-      font-size: 14px;
-      color: #52c41a;
+    text-align: center;
+    margin-top: 24px;
+    color: #52c41a;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    animation: fadeIn 0.5s ease;
   }
+}
 
-  .spinner {
-      margin-top: 16px;
+// Responsive styles
+@media (max-width: 768px) {
+  .faceIdRegister {
+    padding: 16px;
+
+    .container {
+      padding: 16px;
+    }
+
+    .webcamContainer {
+      height: 360px;
+    }
+
+    .registerButton {
+      min-width: 100px;
+      height: 36px;
+      font-size: 14px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .faceIdRegister {
+    .webcamContainer {
+      height: 300px;
+    }
+
+    .registerButton {
+      min-width: 90px;
+      height: 32px;
+      font-size: 13px;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

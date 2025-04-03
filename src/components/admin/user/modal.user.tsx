@@ -1,14 +1,25 @@
 import { FooterToolbar, ModalForm, ProForm, ProFormDigit, ProFormSelect, ProFormText } from "@ant-design/pro-components";
-import { Col, Form, Row, Upload, Button, message, notification, Modal, ConfigProvider } from "antd";
+import { Col, Form, Row, Upload, Button, message, notification, Modal, ConfigProvider, Progress, Space } from "antd";
 import { isMobile } from "react-device-detect";
 import { useState, useEffect, useRef } from "react";
 import { callCreateUser, callFetchRole, callScanFace, callUpdateUser, callUploadSingleFile } from "@/config/api";
 import { IUser } from "@/types/backend";
 import { DebounceSelect } from "./debouce.select";
 import Webcam from "react-webcam";
-import { CameraOutlined, CheckSquareOutlined, LoadingOutlined, PlusOutlined } from "@ant-design/icons";
+import { CameraOutlined, CheckSquareOutlined, LoadingOutlined, PlusOutlined, RetweetOutlined } from "@ant-design/icons";
 import { v4 as uuidv4 } from "uuid";
 import enUS from 'antd/lib/locale/en_US';
+
+// Constants for image capture
+const CAPTURE_WIDTH = 640;
+const CAPTURE_HEIGHT = 480;
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const WEBCAM_CONSTRAINTS = {
+    width: CAPTURE_WIDTH,
+    height: CAPTURE_HEIGHT,
+    facingMode: "user",
+    aspectRatio: 4/3
+};
 
 interface IProps {
     openModal: boolean;
@@ -28,6 +39,8 @@ const ModalUser = (props: IProps) => {
     const { openModal, setOpenModal, reloadTable, dataInit, setDataInit } = props;
     const [roles, setRoles] = useState<ICompanySelect[]>([]);
     const [animation, setAnimation] = useState<string>('open');
+    const [loading, setLoading] = useState(false);
+    const [progress, setProgress] = useState(0);
 
     const [dataFaceImage, setDataFaceImage] = useState<any[]>([]);
     const [isCameraModalOpen, setIsCameraModalOpen] = useState<boolean>(false);
@@ -36,6 +49,7 @@ const ModalUser = (props: IProps) => {
     const [previewTitle, setPreviewTitle] = useState('');
     const [faceDescriptor, setFaceDescriptor] = useState<number[]>([]);
     const [imageName, setImageName] = useState<string>("");
+    const [cameraError, setCameraError] = useState<string | null>(null);
     const webcamRef = useRef<Webcam>(null);
     const [form] = Form.useForm();
 
@@ -59,119 +73,107 @@ const ModalUser = (props: IProps) => {
                         key: dataInit.role?._id,
                     },
                 ]);
-                form.setFieldsValue({ role: { label: dataInit.role.name, value: dataInit.role._id } }); // Đặt giá trị mặc định cho form
+                form.setFieldsValue({ role: { label: dataInit.role.name, value: dataInit.role._id } });
             }
         }
     }, [dataInit, form]);
 
-    const handleUploadFileFaceId = async ({ file, onSuccess, onError }: any) => {
-        let loadingMessage: any;
+    const processImage = async (file: File) => {
+        setLoading(true);
+        setProgress(20);
         try {
-            loadingMessage = message.loading("Đang kiểm tra khuôn mặt...", 0);
-
-            // Gửi file lên backend
-            const res = await callUploadSingleFile(file, "user");
-            if (res && res.data) {
-                const fileName = res.data.fileName as any;
-
-                // Lưu tên file và file gốc vào trạng thái
-                setImageName(fileName);
-                setDataFaceImage([
-                    {
-                        name: fileName,
-                        uid: uuidv4(),
-                        status: "done",
-                        url: `${import.meta.env.VITE_BACKEND_URL}/images/user/${fileName}`,
-                        originFileObj: file, // Lưu file gốc tại đây
-                    },
-                ]);
-
-                if (onSuccess) onSuccess("ok");
-
-                // Gọi API nhận diện khuôn mặt
-                const recognizeRes = await callScanFace(file);
-                if (recognizeRes && recognizeRes.data) {
-                    setFaceDescriptor(recognizeRes); // Lưu faceDescriptor vào trạng thái
-                    message.success("Nhận diện khuôn mặt thành công!");
-                } else {
-                    message.warning("Không thể nhận diện khuôn mặt. Vui lòng thử lại với ảnh khác.");
-                }
-            } else {
-                throw new Error(res.message || "Không thể upload file");
+            // Upload file
+            const uploadRes = await callUploadSingleFile(file, "user");
+            if (!uploadRes?.data?.fileName) {
+                throw new Error('Không thể upload file');
             }
+            setProgress(50);
+
+            // Create FormData for face scan
+            const formData = new FormData();
+            formData.append('image', file);
+
+            // Scan face
+            const scanRes = await callScanFace(formData);
+            if (!scanRes?.data) {
+                throw new Error('Không thể nhận diện khuôn mặt');
+            }
+            setProgress(80);
+
+            // Update state
+            const fileName = uploadRes.data.fileName;
+            setImageName(fileName);
+            setDataFaceImage([{
+                name: fileName,
+                uid: uuidv4(),
+                status: "done",
+                url: `${import.meta.env.VITE_BACKEND_URL}/images/user/${fileName}`,
+                originFileObj: file,
+            }]);
+            setFaceDescriptor(scanRes.data);
+            setProgress(100);
+            message.success("Xử lý ảnh khuôn mặt thành công!");
+            return true;
         } catch (error: any) {
+            message.error(error.response?.data?.message || error.message || "Đã xảy ra lỗi khi xử lý ảnh");
             setDataFaceImage([]);
-            if (onError) {
-                onError({ event: error });
-            }
-            message.error(error.message || "Đã xảy ra lỗi khi upload file");
+            return false;
         } finally {
-            if (loadingMessage) loadingMessage();
+            setLoading(false);
+            setProgress(0);
         }
+    };
+
+    const handleUploadFileFaceId = async ({ file, onSuccess, onError }: any) => {
+        const success = await processImage(file);
+        if (success && onSuccess) onSuccess("ok");
+        else if (!success && onError) onError("Failed to process image");
     };
 
     const captureImage = async () => {
-        let loadingMessage: any;
-        if (webcamRef.current) {
-            const imageSrc = webcamRef.current.getScreenshot();
+        if (!webcamRef.current) return;
+
+        try {
+            setLoading(true);
+            // Add delay for camera focus
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const imageSrc = webcamRef.current.getScreenshot({
+                width: CAPTURE_WIDTH,
+                height: CAPTURE_HEIGHT
+            });
             if (!imageSrc) {
-                message.error("Không thể chụp ảnh. Vui lòng thử lại.");
-                return;
+                throw new Error("Không thể chụp ảnh. Vui lòng thử lại.");
             }
 
-            const blob = await fetch(imageSrc).then((res) => res.blob());
-            const fileName = `face-${Date.now()}.jpg`;
-            const file = new File([blob], fileName, { type: "image/jpeg" });
+            // Convert to File
+            const blob = await fetch(imageSrc).then(res => res.blob());
+            const file = new File([blob], `face-${Date.now()}.jpg`, { type: "image/jpeg" });
 
-            try {
-                // Hiển thị thông báo "Đang kiểm tra khuôn mặt"
-                loadingMessage = message.loading("Đang kiểm tra khuôn mặt...", 0);
-
-                // Gửi file lên backend
-                const res = await callUploadSingleFile(file, "user");
-                if (res && res.data) {
-                    const uploadedFileName = res.data.fileName;
-
-                    // Lưu file gốc và thông tin vào trạng thái
-                    setImageName(uploadedFileName);
-                    setDataFaceImage([
-                        {
-                            name: uploadedFileName,
-                            uid: uuidv4(),
-                            status: "done",
-                            url: `${import.meta.env.VITE_BACKEND_URL}/images/user/${uploadedFileName}`,
-                            originFileObj: file, // Lưu file gốc tại đây
-                        },
-                    ]);
-                    setIsCameraModalOpen(false);
-                    message.success("Chụp ảnh Face ID thành công!");
-
-                    // Gọi API nhận diện khuôn mặt
-                    const recognizeRes = await callScanFace(file);
-                    if (recognizeRes && recognizeRes.data) {
-                        setFaceDescriptor(recognizeRes.data); // Lưu faceDescriptor vào trạng thái
-                        message.success("Nhận diện khuôn mặt thành công!");
-                        console.log("Kết quả nhận diện:", recognizeRes.data);
-                    } else {
-                        message.warning("Không thể nhận diện khuôn mặt. Vui lòng thử lại.");
-                    }
-                } else {
-                    throw new Error("Không thể lưu ảnh. Vui lòng thử lại.");
-                }
-            } catch (error: any) {
-                console.error("Lỗi khi xử lý ảnh:", error);
-                message.error(error.message || "Đã xảy ra lỗi khi xử lý ảnh.");
-            } finally {
-                // Đóng thông báo "Đang kiểm tra khuôn mặt"
-                if (loadingMessage) loadingMessage();
+            const success = await processImage(file);
+            if (success) {
+                setIsCameraModalOpen(false);
             }
+        } catch (error: any) {
+            message.error(error.message || "Đã xảy ra lỗi khi chụp ảnh");
+        } finally {
+            setLoading(false);
         }
     };
 
-    const submitUser = async (valuesForm: any) => {
-        const { name, email, password, address, age, gender, role } = valuesForm;
+    const handleCameraError = (error: string | DOMException) => {
+        console.error('Camera error:', error);
+        setCameraError('Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập và thử lại.');
+    };
 
-        const file = dataFaceImage.length > 0 ? dataFaceImage[0]?.originFileObj : undefined;
+    const submitUser = async (valuesForm: any) => {
+        if (!dataFaceImage.length) {
+            message.error("Vui lòng thêm ảnh khuôn mặt");
+            return;
+        }
+
+        const { name, email, password, address, age, gender, role } = valuesForm;
+        const file = dataFaceImage[0]?.originFileObj;
 
         const user: IUser = {
             name,
@@ -181,51 +183,48 @@ const ModalUser = (props: IProps) => {
             gender,
             address,
             role: role?.value || dataInit?.role?._id,
-            faceDescriptor: faceDescriptor, // Sử dụng faceDescriptor từ trạng thái
-            image: imageName, // Tên file ảnh
+            faceDescriptor,
+            image: imageName,
         };
 
         try {
+            setLoading(true);
             if (dataInit?._id) {
                 const res = await callUpdateUser(dataInit._id, user, file);
                 if (res.data) {
                     message.success("Cập nhật user thành công");
                     handleReset();
                     reloadTable();
-                } else {
-                    notification.error({
-                        message: "Có lỗi xảy ra",
-                    });
                 }
             } else {
                 const res = await callCreateUser(user, file);
                 if (res.data) {
-                    message.success("Tạo user thành công");
+                    message.success("Tạo mới user thành công");
                     handleReset();
                     reloadTable();
-                } else {
-                    notification.error({
-                        message: "Có lỗi xảy ra",
-                    });
                 }
             }
-        } catch (error) {
-            console.error("Lỗi khi submit user:", error);
-            message.error("Đã xảy ra lỗi khi submit user.");
+        } catch (error: any) {
+            notification.error({
+                message: "Có lỗi xảy ra",
+                description: error.response?.data?.message || error.message
+            });
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleReset = async () => {
+    const handleReset = () => {
         form.resetFields();
         setDataInit(null);
-
-        setAnimation('close')
+        setAnimation('close');
         setDataFaceImage([]);
         setRoles([]);
         setOpenModal(false);
-        setAnimation('open')
+        setAnimation('open');
+        setFaceDescriptor([]);
+        setImageName("");
     };
-
 
     const handlePreview = async (file: any) => {
         if (!file.originFileObj) {
@@ -249,16 +248,13 @@ const ModalUser = (props: IProps) => {
 
     async function fetchRoleList(name: string): Promise<ICompanySelect[]> {
         const res = await callFetchRole(`current=1&pageSize=100&name=/${name}/i`);
-        if (res && res.data) {
-            const list = res.data.result;
-            const temp = list.map((item) => ({
+        if (res?.data?.result) {
+            return res.data.result.map(item => ({
                 label: item.name as string,
                 value: item._id as string,
             }));
-            return temp;
-        } else {
-            return [];
         }
+        return [];
     }
 
     return (
@@ -285,7 +281,8 @@ const ModalUser = (props: IProps) => {
                 submitter={{
                     render: (_: any, dom: any) => <FooterToolbar>{dom}</FooterToolbar>,
                     submitButtonProps: {
-                        icon: <CheckSquareOutlined />
+                        icon: <CheckSquareOutlined />,
+                        loading: loading
                     },
                     searchConfig: {
                         resetText: "Hủy",
@@ -357,8 +354,8 @@ const ModalUser = (props: IProps) => {
                                 placeholder="Chọn vai trò"
                                 fetchOptions={fetchRoleList}
                                 onChange={(newValue: any) => {
-                                    setRoles(newValue); // Cập nhật giá trị vai trò
-                                    form.setFieldsValue({ role: newValue }); // Cập nhật giá trị vào form
+                                    setRoles(newValue);
+                                    form.setFieldsValue({ role: newValue });
                                 }}
                                 style={{ width: "100%" }}
                             />
@@ -373,51 +370,45 @@ const ModalUser = (props: IProps) => {
                         />
                     </Col>
                     <Col lg={12} md={12} sm={24} xs={24}>
-                        <Form.Item label="Ảnh Face ID"
-                            rules={[{
-                                required: true,
-                                message: 'Vui lòng không bỏ trống',
-                                validator: () => {
-                                    if (dataFaceImage.length > 0) return Promise.resolve();
-                                    else return Promise.reject(false);
-                                }
-                            }]}
-                            required>
-                            <ConfigProvider locale={enUS}>
-                                <Upload
-                                    listType="picture-card"
-                                    maxCount={1}
-                                    customRequest={handleUploadFileFaceId}
-                                    fileList={dataFaceImage}
-                                    onRemove={() => setDataFaceImage([])}
-                                    onPreview={handlePreview}
-                                    defaultFileList={
-                                        dataInit?._id ?
-                                            [
-                                                {
-                                                    uid: uuidv4(),
-                                                    name: dataInit.image ?? "",
-                                                    status: 'done',
-                                                    url: `${import.meta.env.VITE_BACKEND_URL}/images/user/${dataInit.image}`,
-                                                }
-                                            ] : []
-                                    }
-                                >
-                                    {dataFaceImage.length === 0 && (
-                                        <div>
-                                            <PlusOutlined />
-                                            <div style={{ marginTop: 8 }}>Upload</div>
-                                        </div>
-                                    )}
-                                </Upload>
-                            </ConfigProvider>
-                            <Button
-                                icon={<CameraOutlined />}
-                                onClick={() => setIsCameraModalOpen(true)}
-                                style={{ marginTop: 8 }}
-                            >
-                                Chụp ảnh
-                            </Button>
+                        <Form.Item 
+                            label="Ảnh Face ID"
+                            required
+                            help="Vui lòng giữ khuôn mặt tự nhiên, nhìn thẳng vào camera"
+                        >
+                            <Space direction="vertical" style={{ width: '100%' }}>
+                                <ConfigProvider locale={enUS}>
+                                    <Upload
+                                        listType="picture-card"
+                                        maxCount={1}
+                                        customRequest={handleUploadFileFaceId}
+                                        fileList={dataFaceImage}
+                                        onRemove={() => {
+                                            setDataFaceImage([]);
+                                            setFaceDescriptor([]);
+                                            setImageName("");
+                                        }}
+                                        onPreview={handlePreview}
+                                        accept="image/jpeg,image/png"
+                                    >
+                                        {dataFaceImage.length === 0 && (
+                                            <div>
+                                                <PlusOutlined />
+                                                <div style={{ marginTop: 8 }}>Upload</div>
+                                            </div>
+                                        )}
+                                    </Upload>
+                                </ConfigProvider>
+                                <Space>
+                                    <Button
+                                        icon={<CameraOutlined />}
+                                        onClick={() => setIsCameraModalOpen(true)}
+                                        loading={loading}
+                                    >
+                                        Chụp ảnh
+                                    </Button>
+                                    {loading && <Progress percent={progress} size="small" style={{ width: 100 }} />}
+                                </Space>
+                            </Space>
                         </Form.Item>
                     </Col>
                 </Row>
@@ -432,26 +423,77 @@ const ModalUser = (props: IProps) => {
             >
                 <img alt="example" style={{ width: '100%' }} src={previewImage} />
             </Modal>
+
             <Modal
                 title="Chụp ảnh Face ID"
                 open={isCameraModalOpen}
                 onCancel={() => setIsCameraModalOpen(false)}
-                footer={null}
-                destroyOnClose
+                footer={[
+                    <Button key="back" onClick={() => setIsCameraModalOpen(false)}>
+                        Hủy
+                    </Button>,
+                    <Button
+                        key="capture"
+                        type="primary"
+                        icon={<CameraOutlined />}
+                        onClick={captureImage}
+                        loading={loading}
+                    >
+                        Chụp ảnh
+                    </Button>,
+                ]}
+                width={700}
             >
-                <Webcam
-                    audio={false}
-                    ref={webcamRef}
-                    screenshotFormat="image/jpeg"
-                    style={{ width: "100%", borderRadius: "8px" }}
-                />
-                <Button
-                    icon={<CameraOutlined />}
-                    onClick={captureImage}
-                    style={{ marginTop: 8 }}
-                >
-                    Chụp ảnh
-                </Button>
+                {cameraError ? (
+                    <div style={{ textAlign: 'center', padding: '20px' }}>
+                        <Space direction="vertical">
+                            <div>{cameraError}</div>
+                            <Button 
+                                icon={<RetweetOutlined />}
+                                onClick={() => {
+                                    setCameraError(null);
+                                    setIsCameraModalOpen(false);
+                                    setTimeout(() => setIsCameraModalOpen(true), 500);
+                                }}
+                            >
+                                Thử lại
+                            </Button>
+                        </Space>
+                    </div>
+                ) : (
+                    <>
+                        <div style={{ position: 'relative', width: '100%' }}>
+                            <Webcam
+                                audio={false}
+                                ref={webcamRef}
+                                screenshotFormat="image/jpeg"
+                                videoConstraints={WEBCAM_CONSTRAINTS}
+                                onUserMediaError={handleCameraError}
+                                style={{ width: '100%', borderRadius: '8px' }}
+                            />
+                            <div 
+                                style={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    width: '240px',
+                                    height: '240px',
+                                    border: '2px solid rgba(255, 255, 255, 0.8)',
+                                    borderRadius: '50%',
+                                    boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.3)',
+                                }}
+                            />
+                        </div>
+                        <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                            <Space direction="vertical">
+                                <div>Vui lòng đặt khuôn mặt vào giữa khung hình</div>
+                                <div>Giữ khuôn mặt tự nhiên và nhìn thẳng vào camera</div>
+                                {loading && <Progress percent={progress} size="small" />}
+                            </Space>
+                        </div>
+                    </>
+                )}
             </Modal>
         </>
     );

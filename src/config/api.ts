@@ -5,30 +5,160 @@ import axios from 'config/axios-customize';
  * 
 Module Auth
  */
-export const callRegister = (name: string, email: string, password: string, age: number, gender: string, address: string) => {
-    return axios.post<IBackendRes<IUser>>('/api/v1/auth/register', { name, email, password, age, gender, address })
+export const callRegister = (name: string, email: string, password: string, age: number, gender: string, address: string, file: File) => {
+    const formData = new FormData();
+    
+    // Log the data being sent
+    console.log('Sending registration data:', {
+        name,
+        email,
+        password,
+        age,
+        gender,
+        address,
+        fileSize: file.size,
+        fileType: file.type
+    });
+
+    // Append all fields to FormData
+    formData.append('name', name);
+    formData.append('email', email);
+    formData.append('password', password);
+    formData.append('age', age.toString());
+    formData.append('gender', gender);
+    formData.append('address', address);
+    formData.append('image', file);
+
+    // Log the FormData contents
+    for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+    }
+
+    return axios.post<IBackendRes<IUser>>('/api/v1/auth/register', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
 }
 
 export const callLogin = (username: string, password: string) => {
     return axios.post<IBackendRes<IAccount>>('/api/v1/auth/login1', { username, password })
 }
 
-export const callLoginWithFaceId = (fileDescriptor: File) => {
-    const formData = new FormData();
-    formData.append('image', fileDescriptor);
-    return axios.post<IBackendRes<IAccount>>('/api/v1/auth/login', formData,
-        {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        }
-    )
+interface ILoginResponseData {
+    message: any;
+    data: any;
+    access_token: string;
+    user: {
+        _id: string;
+        name: string;
+        email: string;
+        role: {
+            _id: string;
+            name: string;
+            permissions?: string[];
+        };
+    };
 }
 
-export const callScanFace = async (file: File) => {
-    const formData = new FormData();
-    formData.append('image', file);
+interface ILoginResponse {
+    statusCode: number;
+    message: string;
+    data: ILoginResponseData;
+}
 
+export const callLoginWithFaceId = async (fileDescriptor: File) => {
+    const MAX_RETRIES = 2;
+    const TIMEOUT = 30000; // 30 seconds
+    const RETRY_DELAY = 2000; // 2 seconds
+    let retryCount = 0;
+
+    const attemptLogin = async () => {
+        try {
+            // Validate input
+            if (!fileDescriptor) {
+                throw new Error('File ảnh là bắt buộc');
+            }
+
+            if (!(fileDescriptor instanceof File)) {
+                throw new Error('File không hợp lệ');
+            }
+
+            // Log request details for debugging
+            console.log('Login request details:', {
+                fileName: fileDescriptor.name,
+                fileSize: fileDescriptor.size,
+                fileType: fileDescriptor.type,
+                attempt: retryCount + 1
+            });
+
+            const formData = new FormData();
+            formData.append('image', fileDescriptor);
+
+            // Make API call with proper error handling
+            const response = await axios.post<ILoginResponse>(
+                '/api/v1/auth/login',
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    },
+                    timeout: TIMEOUT,
+                    validateStatus: (status) => {
+                        return status >= 200 && status < 500; // Handle only client errors
+                    }
+                }
+            );
+
+            // Log full response for debugging
+            console.log('Server response:', response.data);
+
+            // Check for specific error messages in response
+            if (response.data?.message?.includes('Invalid response format') || 
+                response.data?.message?.includes('không hợp lệ')) {
+                throw new Error('Không thể xác thực khuôn mặt. Vui lòng thử lại với ánh sáng tốt hơn.');
+            }
+
+            // Validate response structure
+            if (!response.data?.data?.access_token) {
+                throw new Error('Không thể xác thực. Vui lòng đảm bảo khuôn mặt rõ ràng và thử lại.');
+            }
+
+            return response.data;
+
+        } catch (error: any) {
+            // Log error details
+            console.error('Login error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+                attempt: retryCount + 1
+            });
+
+            // Handle specific error cases
+            if (error.code === 'ECONNABORTED') {
+                if (retryCount < MAX_RETRIES) {
+                    retryCount++;
+                    console.log(`Retrying login attempt ${retryCount} after ${RETRY_DELAY}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+                    return attemptLogin();
+                }
+                throw new Error('Kết nối đến server quá lâu. Vui lòng thử lại sau.');
+            }
+
+            // If there's a response from server, use its message
+            if (error.response?.data?.message) {
+                throw new Error(error.response.data.message);
+            }
+
+            throw error;
+        }
+    };
+
+    return attemptLogin();
+};
+
+export const callScanFace = async (formData: FormData) => {
     return axios.post('/api/v1/face-recognition/scan', formData, {
         headers: {
             'Content-Type': 'multipart/form-data',
