@@ -98,73 +98,48 @@ const FaceIdRegister: React.FC = () => {
                 throw new Error('Kích thước ảnh quá lớn. Vui lòng chụp lại.');
             }
 
-            console.log('Sending registration data:', {
-                name,
-                email,
-                password,
-                age,
-                gender,
-                address,
-                fileSize: file.size,
-                fileType: file.type
-            });
+            // Tạo FormData để gửi lên server
+            const formDataToSend = new FormData();
+            formDataToSend.append('image', file);
+            formDataToSend.append('name', name);
+            formDataToSend.append('email', email);
+            formDataToSend.append('password', password);
+            formDataToSend.append('age', age);
+            formDataToSend.append('gender', gender);
+            formDataToSend.append('address', address);
 
-            // Gọi API đăng ký với thông tin người dùng và ảnh khuôn mặt
-            const registerResponse = await callRegister(
-                name,
-                email,
-                password,
-                +age,
-                gender,
-                address,
-                file
+            // Gọi API đăng ký
+            const response = await callRegister(
+                formDataToSend.get('name') as string,
+                formDataToSend.get('email') as string,
+                formDataToSend.get('password') as string,
+                parseInt(formDataToSend.get('age') as string),
+                formDataToSend.get('gender') as string,
+                formDataToSend.get('address') as string,
+                formDataToSend.get('image') as File
             );
 
-            if (registerResponse?.data?._id) {
+            if (response.data) {
+                message.success('Đăng ký thành công!');
                 setIsRegistered(true);
-                setCurrentStep(2);
-                message.success('Đăng ký tài khoản thành công!');
                 setTimeout(() => {
                     navigate('/face-id-login');
                 }, 2000);
-            } else {
-                setError('Đăng ký tài khoản thất bại. Vui lòng thử lại.');
             }
         } catch (error: any) {
             console.error('Lỗi khi đăng ký:', error);
-            // Xử lý các loại lỗi từ face recognition service
-            if (error.response?.data?.message) {
-                // Lỗi từ backend
-                const errorMessage = error.response.data.message;
-                switch (errorMessage) {
-                    case 'Không phát hiện khuôn mặt trong ảnh.':
-                        setError('Không phát hiện khuôn mặt trong ảnh. Vui lòng đảm bảo khuôn mặt của bạn nằm trong khung camera và ánh sáng đủ.');
-                        break;
-                    case 'Khuôn mặt quá nhỏ. Vui lòng đứng gần camera hơn.':
-                        setError('Khuôn mặt quá nhỏ. Vui lòng đứng gần camera hơn để có thể nhận diện tốt hơn.');
-                        break;
-                    case 'Độ tin cậy phát hiện khuôn mặt quá thấp. Vui lòng thử lại.':
-                        setError('Độ tin cậy phát hiện khuôn mặt quá thấp. Vui lòng đảm bảo ánh sáng đủ và khuôn mặt rõ ràng.');
-                        break;
-                    case 'Phát hiện nhiều khuôn mặt. Vui lòng chỉ chụp một khuôn mặt.':
-                        setError('Phát hiện nhiều khuôn mặt. Vui lòng chỉ chụp một khuôn mặt của bạn.');
-                        break;
-                    case 'Vui lòng giữ khuôn mặt tự nhiên, không biểu cảm quá mức.':
-                        setError('Vui lòng giữ khuôn mặt tự nhiên, không biểu cảm quá mức.');
-                        break;
-                    default:
-                        setError(errorMessage);
-                }
-            } else if (error.response?.data?.error) {
-                // Lỗi validation từ backend
-                setError(error.response.data.error);
-            } else if (error.message) {
-                // Lỗi từ frontend
-                setError(error.message);
-            } else {
-                // Lỗi không xác định
-                setError('Đã xảy ra lỗi trong quá trình đăng ký. Vui lòng thử lại.');
-            }
+            const errorMessage = error.response?.data?.message || error.message;
+            const errorMap: Record<string, string> = {
+                'Không phát hiện khuôn mặt trong ảnh.': 'Không phát hiện khuôn mặt trong ảnh. Vui lòng đảm bảo khuôn mặt của bạn nằm trong khung camera và ánh sáng đủ.',
+                'Khuôn mặt quá nhỏ. Vui lòng đứng gần camera hơn.': 'Khuôn mặt quá nhỏ. Vui lòng đứng gần camera hơn để có thể nhận diện tốt hơn.',
+                'Độ tin cậy phát hiện khuôn mặt quá thấp. Vui lòng thử lại.': 'Độ tin cậy phát hiện khuôn mặt quá thấp. Vui lòng đảm bảo ánh sáng đủ và khuôn mặt rõ ràng.',
+                'Phát hiện nhiều khuôn mặt. Vui lòng chỉ chụp một khuôn mặt.': 'Phát hiện nhiều khuôn mặt. Vui lòng chỉ chụp một khuôn mặt của bạn.',
+                'Vui lòng tháo kính mắt và giữ khuôn mặt tự nhiên để quét khuôn mặt chính xác hơn.': 'Vui lòng tháo kính mắt và giữ khuôn mặt tự nhiên để quét khuôn mặt chính xác hơn.',
+                'Vui lòng giữ khuôn mặt tự nhiên, không biểu cảm quá mức.': 'Vui lòng giữ khuôn mặt tự nhiên, không biểu cảm quá mức.',
+                'Đã đạt giới hạn số lượng khuôn mặt': 'Bạn đã đạt giới hạn 3 khuôn mặt. Vui lòng xóa khuôn mặt cũ trước khi thêm mới.',
+                'Khuôn mặt quá giống với khuôn mặt đã đăng ký': 'Khuôn mặt này quá giống với khuôn mặt đã đăng ký. Vui lòng thử lại với khuôn mặt khác.',
+            };
+            setError(errorMap[errorMessage] || errorMessage);
         } finally {
             setLoading(false);
         }

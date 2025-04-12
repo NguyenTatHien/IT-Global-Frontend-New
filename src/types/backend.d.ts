@@ -21,6 +21,7 @@ export interface IAccount {
         _id: string;
         email: string;
         name: string;
+        company: string;
         role: {
             _id: string;
             name: string;
@@ -51,80 +52,35 @@ export interface ICompany {
     updatedAt?: string;
 }
 
-
-
 export interface IUser {
     _id?: string;
-    name: string;
     email: string;
-    password?: string;
+    name: string;
+    password: string;
     age: number;
     gender: string;
     address: string;
-    role?: {
+    role: {
         _id: string;
         name: string;
-    }
-    image?: string;
+    };
+    permissions: {
+        _id: string;
+        name: string;
+        apiPath: string;
+        method: string;
+        module: string;
+    }[];
     faceDescriptor?: number[];
-    createdBy?: string;
-    isDeleted?: boolean;
-    deletedAt?: boolean | null;
+    age?: number;
+    gender?: string;
+    address?: string;
     createdAt?: string;
     updatedAt?: string;
+    image?: string;
 }
 
-export interface IJob {
-    _id?: string;
-    name: string;
-    skills: string[];
-    company?: {
-        _id: string;
-        name: string;
-        logo?: string;
-    }
-    location: string;
-    salary: number;
-    quantity: number;
-    level: string;
-    description: string;
-    startDate: Date;
-    endDate: Date;
-    isActive: boolean;
 
-    createdBy?: string;
-    isDeleted?: boolean;
-    deletedAt?: boolean | null;
-    createdAt?: string;
-    updatedAt?: string;
-}
-
-export interface IResume {
-    _id?: string;
-    email: string;
-    userId: string;
-    url: string;
-    status: string;
-    companyId: string | {
-        _id: string;
-        name: string;
-        logo: string;
-    };
-    jobId: string | {
-        _id: string;
-        name: string;
-    };
-    history?: {
-        status: string;
-        updatedAt: Date;
-        updatedBy: { _id: string; email: string }
-    }[]
-    createdBy?: string;
-    isDeleted?: boolean;
-    deletedAt?: boolean | null;
-    createdAt?: string;
-    updatedAt?: string;
-}
 
 export interface IPermission {
     _id?: string;

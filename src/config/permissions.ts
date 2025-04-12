@@ -1,27 +1,9 @@
 export const ALL_PERMISSIONS = {
-    COMPANIES: {
-        GET_PAGINATE: { method: "GET", apiPath: '/api/v1/companies', module: "COMPANIES" },
-        CREATE: { method: "POST", apiPath: '/api/v1/companies', module: "COMPANIES" },
-        UPDATE: { method: "PATCH", apiPath: '/api/v1/companies/:id', module: "COMPANIES" },
-        DELETE: { method: "DELETE", apiPath: '/api/v1/companies/:id', module: "COMPANIES" },
-    },
-    JOBS: {
-        GET_PAGINATE: { method: "GET", apiPath: '/api/v1/jobs', module: "JOBS" },
-        CREATE: { method: "POST", apiPath: '/api/v1/jobs', module: "JOBS" },
-        UPDATE: { method: "PATCH", apiPath: '/api/v1/jobs/:id', module: "JOBS" },
-        DELETE: { method: "DELETE", apiPath: '/api/v1/jobs/:id', module: "JOBS" },
-    },
     PERMISSIONS: {
         GET_PAGINATE: { method: "GET", apiPath: '/api/v1/permissions', module: "PERMISSIONS" },
         CREATE: { method: "POST", apiPath: '/api/v1/permissions', module: "PERMISSIONS" },
         UPDATE: { method: "PATCH", apiPath: '/api/v1/permissions/:id', module: "PERMISSIONS" },
         DELETE: { method: "DELETE", apiPath: '/api/v1/permissions/:id', module: "PERMISSIONS" },
-    },
-    RESUMES: {
-        GET_PAGINATE: { method: "GET", apiPath: '/api/v1/resumes', module: "RESUMES" },
-        CREATE: { method: "POST", apiPath: '/api/v1/resumes', module: "RESUMES" },
-        UPDATE: { method: "PATCH", apiPath: '/api/v1/resumes/:id', module: "RESUMES" },
-        DELETE: { method: "DELETE", apiPath: '/api/v1/resumes/:id', module: "RESUMES" },
     },
     ROLES: {
         GET_PAGINATE: { method: "GET", apiPath: '/api/v1/roles', module: "ROLES" },
@@ -35,16 +17,31 @@ export const ALL_PERMISSIONS = {
         UPDATE: { method: "PATCH", apiPath: '/api/v1/users/:id', module: "USERS" },
         DELETE: { method: "DELETE", apiPath: '/api/v1/users/:id', module: "USERS" },
     },
+    ATTENDANCE: {
+        CHECK_IN: { method: "POST", apiPath: '/api/v1/attendance/check-in', module: "ATTENDANCE" },
+        CHECK_OUT: { method: "POST", apiPath: '/api/v1/attendance/check-out', module: "ATTENDANCE" },
+    },
+    SHIFTS: {
+        GET_PAGINATE: { method: "GET", apiPath: '/api/v1/shifts', module: "SHIFTS" },
+        CREATE: { method: "POST", apiPath: '/api/v1/shifts', module: "SHIFTS" },
+        UPDATE: { method: "PATCH", apiPath: '/api/v1/shifts/:id', module: "SHIFTS" },
+        DELETE: { method: "DELETE", apiPath: '/api/v1/shifts/:id', module: "SHIFTS" },
+    },
+    USER_SHIFTS: {
+        GET_PAGINATE: { method: "GET", apiPath: '/api/v1/user-shifts', module: "USER_SHIFTS" },
+        CREATE: { method: "POST", apiPath: '/api/v1/user-shifts', module: "USER_SHIFTS" },
+        UPDATE: { method: "PATCH", apiPath: '/api/v1/user-shifts/:id', module: "USER_SHIFTS" },
+        DELETE: { method: "DELETE", apiPath: '/api/v1/user-shifts/:id', module: "USER_SHIFTS" },
+    }
 }
 
 export const ALL_MODULES = {
     AUTH: 'AUTH',
-    COMPANIES: 'COMPANIES',
     FILES: 'FILES',
-    JOBS: 'JOBS',
     PERMISSIONS: 'PERMISSIONS',
-    RESUMES: 'RESUMES',
     ROLES: 'ROLES',
     USERS: 'USERS',
-    SUBSCRIBERS: 'SUBSCRIBERS'
+    ATTENDANCE: 'ATTENDANCE',
+    SHIFTS: 'SHIFTS',
+    USER_SHIFTS: 'USER_SHIFTS'
 }

@@ -1,6 +1,8 @@
 import { IUser } from "@/types/backend";
-import { Badge, Descriptions, Drawer } from "antd";
+import { Badge, Descriptions, Drawer, Button, Space } from "antd";
 import dayjs from 'dayjs';
+import { UserOutlined, MailOutlined } from '@ant-design/icons';
+import MailButton from '../mail/MailButton';
 
 interface IProps {
     onClose: (v: boolean) => void;
@@ -41,6 +43,17 @@ const ViewDetailUser = (props: IProps) => {
                     <Descriptions.Item label="Ngày tạo">{dataInit && dataInit.createdAt ? dayjs(dataInit.createdAt).format('DD-MM-YYYY HH:mm:ss') : ""}</Descriptions.Item>
                     <Descriptions.Item label="Ngày sửa">{dataInit && dataInit.updatedAt ? dayjs(dataInit.updatedAt).format('DD-MM-YYYY HH:mm:ss') : ""}</Descriptions.Item>
 
+                    <Descriptions.Item label="Actions">
+                        <Space>
+                            <Button type="primary" onClick={() => { /* setIsOpenUpdate(true) */ }}>
+                                Edit
+                            </Button>
+                            <MailButton 
+                                recipientEmail={dataInit?.email}
+                                recipientName={dataInit?.name}
+                            />
+                        </Space>
+                    </Descriptions.Item>
                 </Descriptions>
             </Drawer>
         </>

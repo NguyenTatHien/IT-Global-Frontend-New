@@ -1,4 +1,4 @@
-import DataTable from "@/components/client/data-table";
+import DataTable from "@/components/share/data-table";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { IRole } from "@/types/backend";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
@@ -198,11 +198,11 @@ const RolePage = () => {
                             pageSize: meta.pageSize,
                             showSizeChanger: true,
                             total: meta.total,
-                            showTotal: (total, range) => { return (<div> {range[0]}-{range[1]} trên {total} rows</div>) }
+                            showTotal: (total: number, range: number[]) => { return (<div> {range[0]}-{range[1]} trên {total} rows</div>) }
                         }
                     }
                     rowSelection={false}
-                    toolBarRender={(_action, _rows): any => {
+                    toolBarRender={(_action: any, _rows: any): any => {
                         return (
                             <Button
                                 icon={<PlusOutlined />}

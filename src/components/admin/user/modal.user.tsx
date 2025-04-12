@@ -115,7 +115,19 @@ const ModalUser = (props: IProps) => {
             message.success("Xử lý ảnh khuôn mặt thành công!");
             return true;
         } catch (error: any) {
-            message.error(error.response?.data?.message || error.message || "Đã xảy ra lỗi khi xử lý ảnh");
+            const errorMessage = error.response?.data?.message || error.message;
+            const errorMap: Record<string, string> = {
+                'Không thể upload file': 'Không thể tải lên file. Vui lòng thử lại.',
+                'Không thể nhận diện khuôn mặt': 'Không thể nhận diện khuôn mặt. Vui lòng thử lại.',
+                'Khuôn mặt quá nhỏ': 'Khuôn mặt quá nhỏ. Vui lòng đứng gần camera hơn.',
+                'Độ tin cậy phát hiện khuôn mặt quá thấp': 'Độ tin cậy phát hiện khuôn mặt quá thấp. Vui lòng thử lại.',
+                'Phát hiện nhiều khuôn mặt': 'Phát hiện nhiều khuôn mặt. Vui lòng chỉ chụp một khuôn mặt.',
+                'Vui lòng tháo kính mắt': 'Vui lòng tháo kính mắt để quét khuôn mặt chính xác hơn.',
+                'Vui lòng giữ khuôn mặt tự nhiên': 'Vui lòng giữ khuôn mặt tự nhiên, không biểu cảm quá mức.',
+                'Đã đạt giới hạn số lượng khuôn mặt': 'Người dùng đã đạt giới hạn 3 khuôn mặt. Vui lòng xóa khuôn mặt cũ trước khi thêm mới.',
+                'Khuôn mặt quá giống với khuôn mặt đã đăng ký': 'Khuôn mặt này quá giống với khuôn mặt đã đăng ký. Vui lòng thử lại với khuôn mặt khác.',
+            };
+            message.error(errorMap[errorMessage] || errorMessage || "Đã xảy ra lỗi khi xử lý ảnh");
             setDataFaceImage([]);
             return false;
         } finally {
@@ -185,6 +197,7 @@ const ModalUser = (props: IProps) => {
             role: role?.value || dataInit?.role?._id,
             faceDescriptor,
             image: imageName,
+            permissions: [],
         };
 
         try {

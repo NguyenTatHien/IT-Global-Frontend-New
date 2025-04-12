@@ -1,8 +1,9 @@
 import { IBackendRes } from "@/types/backend";
 import { Mutex } from "async-mutex";
-import axiosClient from "axios";
+import axios from "axios";
 import { store } from "@/redux/store";
 import { setRefreshTokenAction } from "@/redux/slice/accountSlide";
+
 interface AccessTokenResponse {
     access_token: string;
 }
@@ -11,8 +12,9 @@ interface AccessTokenResponse {
  * Creates an initial 'axios' instance with custom settings.
  */
 
-const instance = axiosClient.create({
-    baseURL: import.meta.env.VITE_BACKEND_URL as string,
+const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+const instance = axios.create({
+    baseURL: baseUrl,
     withCredentials: true
 });
 
@@ -27,15 +29,19 @@ const handleRefreshToken = async (): Promise<string | null> => {
     });
 };
 
+// Add a request interceptor
 instance.interceptors.request.use(function (config) {
-    if (typeof window !== "undefined" && window && window.localStorage && window.localStorage.getItem('access_token')) {
-        config.headers.Authorization = 'Bearer ' + window.localStorage.getItem('access_token');
+    // Get token from localStorage
+    const access_token = localStorage.getItem('access_token');
+    
+    // If token exists, add it to the headers
+    if (access_token) {
+        config.headers.Authorization = `Bearer ${access_token}`;
     }
-    if (!config.headers.Accept && config.headers["Content-Type"]) {
-        config.headers.Accept = "application/json";
-        config.headers["Content-Type"] = "application/json; charset=utf-8";
-    }
+    
     return config;
+}, function (error) {
+    return Promise.reject(error);
 });
 
 /**
@@ -73,6 +79,18 @@ instance.interceptors.response.use(
         return error?.response?.data ?? Promise.reject(error);
     }
 );
+
+// Add a response interceptor
+instance.interceptors.response.use(function (response) {
+    return response;
+}, function (error) {
+    // Handle 401 Unauthorized error
+    if (error.response && error.response.status === 401) {
+        localStorage.removeItem('access_token');
+        window.location.href = '/login';
+    }
+    return Promise.reject(error);
+});
 
 /**
  * Replaces main `axios` instance with the custom-one.

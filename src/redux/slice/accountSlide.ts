@@ -16,6 +16,7 @@ interface IState {
     isRefreshToken: boolean;
     errorRefreshToken: string;
     user: {
+        company: any;
         _id: string;
         email: string;
         name: string;
@@ -48,6 +49,7 @@ const initialState: IState = {
             name: "",
         },
         permissions: [],
+        company: undefined
     },
 
     activeMenu: 'home'
@@ -77,8 +79,9 @@ export const accountSlide = createSlice({
             state.isAuthenticated = false;
             state.user = {
                 _id: "",
-                email: "",
+                email: "", 
                 name: "",
+                company: undefined,
                 role: {
                     _id: "",
                     name: "",

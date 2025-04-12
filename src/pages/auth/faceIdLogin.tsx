@@ -151,13 +151,27 @@ const FaceIdLogin: React.FC = () => {
         return (base64String.length * 3) / 4 - padding;
     };
 
-    const handleLogin = async (imageSrc: string) => {
+    const handleLogin = async () => {
+        if (!webcamRef.current) return;
+        
         setLoading(true);
         setError(null);
         setProcessingProgress(0);
 
         try {
-            // Convert optimized image to File
+            // Chụp ảnh từ camera
+            const imageSrc = webcamRef.current.getScreenshot({
+                width: OPTIMAL_WIDTH,
+                height: OPTIMAL_HEIGHT
+            });
+
+            if (!imageSrc) {
+                throw new Error('Không thể chụp ảnh. Vui lòng thử lại.');
+            }
+
+            setProcessingProgress(30);
+
+            // Chuyển đổi base64 thành File
             const base64Data = imageSrc.split(',')[1];
             const byteCharacters = atob(base64Data);
             const byteArrays = [];
@@ -172,29 +186,47 @@ const FaceIdLogin: React.FC = () => {
                 byteArrays.push(byteArray);
             }
 
-            setProcessingProgress(30);
-
             const blob = new Blob(byteArrays, { type: 'image/jpeg' });
             const file = new File([blob], `face-login-${Date.now()}.jpg`, { type: 'image/jpeg' });
-
+            
             setProcessingProgress(50);
 
-            // Call API
+            // Gọi API đăng nhập
             const response = await callLoginWithFaceId(file);
             
             setProcessingProgress(80);
 
-            if (!response.data?.access_token) {
+            console.log('Login response:', response);
+            console.log('Response data:', response.data);
+
+            // Kiểm tra cấu trúc response
+            if (!response.data) {
+                throw new Error('Không nhận được phản hồi từ server');
+            }
+
+            const { access_token, user } = response.data;
+            
+            if (!access_token) {
                 throw new Error('Token không hợp lệ');
             }
 
-            // Save token and update auth state
-            localStorage.setItem('access_token', response.data.access_token);
+            if (!user) {
+                throw new Error('Thông tin người dùng không hợp lệ');
+            }
+
+            // Lưu token và cập nhật trạng thái
+            localStorage.setItem('access_token', access_token);
             
             try {
                 await dispatch(fetchAccount());
                 setProcessingProgress(100);
                 message.success('Đăng nhập thành công!');
+                
+                // Kiểm tra token trước khi chuyển hướng
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    throw new Error('Token không tồn tại');
+                }
                 
                 const redirectUrl = callback || '/admin';
                 window.location.href = redirectUrl;
@@ -212,6 +244,8 @@ const FaceIdLogin: React.FC = () => {
 
     const handleLoginError = (error: any) => {
         console.error('Full error object:', error);
+        console.error('Error response:', error.response);
+        console.error('Error message:', error.message);
         
         const errorMessage = error.response?.data?.message || error.message;
         const errorMap: Record<string, string> = {
@@ -225,6 +259,12 @@ const FaceIdLogin: React.FC = () => {
             'File không hợp lệ': 'File ảnh không hợp lệ. Vui lòng thử lại',
             'Kích thước ảnh quá lớn': 'Kích thước ảnh quá lớn. Vui lòng thử lại',
             'Vui lòng giữ khuôn mặt tự nhiên, không biểu cảm quá mức.': 'Vui lòng giữ khuôn mặt tự nhiên và thẳng, không cười quá lớn hoặc có biểu cảm mạnh',
+            'Vui lòng tháo kính mắt và giữ khuôn mặt tự nhiên để quét khuôn mặt chính xác hơn.': 'Vui lòng tháo kính mắt và giữ khuôn mặt tự nhiên để quét khuôn mặt chính xác hơn.',
+            'Khuôn mặt quá nhỏ. Vui lòng đứng gần camera hơn.': 'Khuôn mặt quá nhỏ. Vui lòng đứng gần camera hơn để có thể nhận diện tốt hơn.',
+            'Độ tin cậy phát hiện khuôn mặt quá thấp. Vui lòng thử lại.': 'Độ tin cậy phát hiện khuôn mặt quá thấp. Vui lòng đảm bảo ánh sáng đủ và khuôn mặt rõ ràng.',
+            'Phát hiện nhiều khuôn mặt. Vui lòng chỉ chụp một khuôn mặt.': 'Phát hiện nhiều khuôn mặt. Vui lòng chỉ chụp một khuôn mặt của bạn.',
+            'Không tìm thấy khuôn mặt phù hợp.': 'Không tìm thấy khuôn mặt phù hợp trong hệ thống. Vui lòng đăng ký trước.',
+            'Role not found': 'Không tìm thấy vai trò người dùng. Vui lòng liên hệ admin.',
         };
 
         setError(errorMap[errorMessage] || errorMessage || 'Đã xảy ra lỗi. Vui lòng thử lại.');
@@ -233,7 +273,7 @@ const FaceIdLogin: React.FC = () => {
     const handleConfirmImage = async () => {
         if (previewImage) {
             setShowPreview(false);
-            await handleLogin(previewImage);
+            await handleLogin();
         }
     };
 
@@ -331,47 +371,14 @@ const FaceIdLogin: React.FC = () => {
                             <Button
                                 type="primary"
                                 icon={loading ? <LoadingOutlined /> : <CameraOutlined />}
-                                onClick={handleCapture}
+                                onClick={handleLogin}
                                 disabled={loading}
                                 className={styles.loginButton}
                                 size="large"
                             >
-                                {loading ? 'Đang xử lý...' : 'Chụp ảnh'}
+                                {loading ? 'Đang xử lý...' : 'Đăng nhập'}
                             </Button>
-                            
-                            {error && (
-                                <Button
-                                    icon={<RedoOutlined />}
-                                    onClick={handleRetakeImage}
-                                    className={styles.retakeButton}
-                                    size="large"
-                                >
-                                    Chụp lại
-                                </Button>
-                            )}
                         </div>
-
-                        <Modal
-                            title="Xác nhận ảnh"
-                            open={showPreview}
-                            onOk={handleConfirmImage}
-                            onCancel={handleRetakeImage}
-                            okText="Xác nhận"
-                            cancelText="Chụp lại"
-                            width={800}
-                            centered
-                        >
-                            <div className={styles.previewContainer}>
-                                <img 
-                                    src={previewImage || ''} 
-                                    alt="Preview" 
-                                    className={styles.previewImage}
-                                />
-                                <Text type="secondary">
-                                    Vui lòng kiểm tra ảnh và xác nhận để tiếp tục
-                                </Text>
-                            </div>
-                        </Modal>
                     </>
                 )}
             </div>
