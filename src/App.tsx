@@ -23,6 +23,7 @@ import Shifts from './components/admin/shifts/Shifts';
 import UserShifts from './components/admin/user-shifts/UserShifts';
 import { ConfigProvider } from 'antd';
 import vi from 'antd/locale/vi_VN';
+import MyShifts from './components/admin/user-shifts/MyShifts';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -110,6 +111,13 @@ export default function App() {
           element:
             <ProtectedRoute>
               <UserShifts />
+            </ProtectedRoute>
+        },
+        {
+          path: "my-shifts",
+          element:
+            <ProtectedRoute>
+              <MyShifts />
             </ProtectedRoute>
         }
       ],

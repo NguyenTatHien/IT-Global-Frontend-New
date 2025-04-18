@@ -11,6 +11,7 @@ import {
     ClockCircleOutlined,
     HistoryOutlined,
     TeamOutlined,
+    CalendarOutlined,
 } from '@ant-design/icons';
 import { Layout, Menu, Dropdown, Space, message, Avatar, Button } from 'antd';
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -54,6 +55,16 @@ const LayoutAdmin = () => {
                 && item.method === ALL_PERMISSIONS.USERS.GET_PAGINATE.method
             )
 
+            const viewShifts = permissions.find(item =>
+                item.apiPath === ALL_PERMISSIONS.SHIFTS.GET_PAGINATE.apiPath
+                && item.method === ALL_PERMISSIONS.SHIFTS.GET_PAGINATE.method
+            )
+
+            const viewUserShifts = permissions.find(item =>
+                item.apiPath === ALL_PERMISSIONS.USER_SHIFTS.GET_PAGINATE.apiPath
+                && item.method === ALL_PERMISSIONS.USER_SHIFTS.GET_PAGINATE.method
+            )
+
             const full = [
                 {
                     label: <Link to='/admin'>Bảng điều khiển</Link>,
@@ -85,15 +96,20 @@ const LayoutAdmin = () => {
                     key: '/admin/attendance-history',
                     icon: <HistoryOutlined />
                 },
-                {
+                ...(viewShifts ? [{
                     label: <Link to='/admin/shifts'>Quản lý ca làm việc</Link>,
                     key: '/admin/shifts',
                     icon: <ClockCircleOutlined />
-                },
-                {
+                }] : []),
+                ...(viewUserShifts ? [{
                     label: <Link to='/admin/user-shifts'>Phân ca nhân viên</Link>,
                     key: '/admin/user-shifts',
                     icon: <TeamOutlined />
+                }] : []),
+                {
+                    label: <Link to='/admin/my-shifts'>Ca làm việc của tôi</Link>,
+                    key: '/admin/my-shifts',
+                    icon: <CalendarOutlined />
                 },
             ];
 

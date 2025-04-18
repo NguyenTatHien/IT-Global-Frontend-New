@@ -196,9 +196,6 @@ const FaceIdLogin: React.FC = () => {
             
             setProcessingProgress(80);
 
-            console.log('Login response:', response);
-            console.log('Response data:', response.data);
-
             // Kiểm tra cấu trúc response
             if (!response.data) {
                 throw new Error('Không nhận được phản hồi từ server');

@@ -69,7 +69,7 @@ const ModalPermission = (props: IProps) => {
     return (
         <>
             <ModalForm
-                title={<>{dataInit?._id ? "Cập nhật Permission" : "Tạo mới Permission"}</>}
+                title={<>{dataInit?._id ? "Cập nhật quyền" : "Tạo mới quyền"}</>}
                 open={openModal}
                 modalProps={{
                     onCancel: () => { handleReset() },
@@ -90,29 +90,29 @@ const ModalPermission = (props: IProps) => {
                 <Row gutter={16}>
                     <Col lg={12} md={12} sm={24} xs={24}>
                         <ProFormText
-                            label="Tên Permission"
+                            label="Tên quyền"
                             name="name"
                             rules={[
                                 { required: true, message: 'Vui lòng không bỏ trống' },
                             ]}
-                            placeholder="Nhập name"
+                            placeholder="Nhập tên quyền"
                         />
                     </Col>
                     <Col lg={12} md={12} sm={24} xs={24}>
                         <ProFormText
-                            label="API Path"
+                            label="Đường dẫn API"
                             name="apiPath"
                             rules={[
                                 { required: true, message: 'Vui lòng không bỏ trống' },
                             ]}
-                            placeholder="Nhập path"
+                            placeholder="Nhập đường dẫn API"
                         />
                     </Col>
 
                     <Col lg={12} md={12} sm={24} xs={24}>
                         <ProFormSelect
                             name="method"
-                            label="Method"
+                            label="Phương thức"
                             valueEnum={{
                                 GET: 'GET',
                                 POST: 'POST',
@@ -120,8 +120,8 @@ const ModalPermission = (props: IProps) => {
                                 PATCH: 'PATCH',
                                 DELETE: 'DELETE',
                             }}
-                            placeholder="Please select a method"
-                            rules={[{ required: true, message: 'Vui lòng chọn method!' }]}
+                            placeholder="Vui lòng chọn phương thức"
+                            rules={[{ required: true, message: 'Vui lòng chọn phương thức!' }]}
                         />
                     </Col>
                     <Col lg={12} md={12} sm={24} xs={24}>
@@ -129,7 +129,7 @@ const ModalPermission = (props: IProps) => {
                             name="module"
                             label="Thuộc Module"
                             valueEnum={ALL_MODULES}
-                            placeholder="Please select a module"
+                            placeholder="Vui lòng chọn module"
                             rules={[{ required: true, message: 'Vui lòng chọn module!' }]}
                         />
                     </Col>

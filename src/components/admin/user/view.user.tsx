@@ -13,6 +13,32 @@ interface IProps {
 const ViewDetailUser = (props: IProps) => {
     const { onClose, open, dataInit, setDataInit } = props;
 
+    const getEmployeeTypeText = (type: string) => {
+        switch (type) {
+            case 'official':
+                return 'Nhân viên chính thức';
+            case 'contract':
+                return 'Nhân viên hợp đồng';
+            case 'intern':
+                return 'Thực tập sinh';
+            default:
+                return 'Không xác định';
+        }
+    };
+
+    const getEmployeeTypeStatus = (type: string) => {
+        switch (type) {
+            case 'official':
+                return 'success';
+            case 'contract':
+                return 'warning';
+            case 'intern':
+                return 'processing';
+            default:
+                return 'default';
+        }
+    };
+
     return (
         <>
             <Drawer
@@ -30,31 +56,43 @@ const ViewDetailUser = (props: IProps) => {
                     <Descriptions.Item label="Giới Tính">{dataInit?.gender}</Descriptions.Item>
                     <Descriptions.Item label="Tuổi">{dataInit?.age}</Descriptions.Item>
 
-                    <Descriptions.Item label="Vai trò" >
+                    <Descriptions.Item label="Loại nhân viên">
+                        <Badge 
+                            status={getEmployeeTypeStatus(dataInit?.employeeType || '')} 
+                            text={getEmployeeTypeText(dataInit?.employeeType || '')} 
+                        />
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Vai trò">
                         <Badge status="processing" text={<>{dataInit?.role}</>} />
                     </Descriptions.Item>
-                    <Descriptions.Item label="Địa chỉ" >{dataInit?.address}</Descriptions.Item>
+
+                    <Descriptions.Item label="Địa chỉ">{dataInit?.address}</Descriptions.Item>
                     {/* <Descriptions.Item label="Thông tin công ty" span={2}>
                         Id: {dataInit?.company?._id ?? "-"}
                         <br />
                         Tên: {dataInit?.company?.name ?? "-"}
                         <br />
                     </Descriptions.Item> */}
-                    <Descriptions.Item label="Ngày tạo">{dataInit && dataInit.createdAt ? dayjs(dataInit.createdAt).format('DD-MM-YYYY HH:mm:ss') : ""}</Descriptions.Item>
-                    <Descriptions.Item label="Ngày sửa">{dataInit && dataInit.updatedAt ? dayjs(dataInit.updatedAt).format('DD-MM-YYYY HH:mm:ss') : ""}</Descriptions.Item>
+                    <Descriptions.Item label="Ngày tạo">
+                        {dataInit && dataInit.createdAt ? dayjs(dataInit.createdAt).format('DD-MM-YYYY HH:mm:ss') : ""}
+                    </Descriptions.Item>
 
-                    <Descriptions.Item label="Actions">
-                        <Space>
-                            <Button type="primary" onClick={() => { /* setIsOpenUpdate(true) */ }}>
-                                Edit
-                            </Button>
-                            <MailButton 
-                                recipientEmail={dataInit?.email}
-                                recipientName={dataInit?.name}
-                            />
-                        </Space>
+                    <Descriptions.Item label="Ngày sửa" span={2}>
+                        {dataInit && dataInit.updatedAt ? dayjs(dataInit.updatedAt).format('DD-MM-YYYY HH:mm:ss') : ""}
                     </Descriptions.Item>
                 </Descriptions>
+
+                <div style={{ marginTop: '24px' }}>
+                    <Space>
+                        <Button type="primary" onClick={() => { /* setIsOpenUpdate(true) */ }}>
+                            Edit
+                        </Button>
+                        <MailButton 
+                            recipientEmail={dataInit?.email}
+                            recipientName={dataInit?.name}
+                        />
+                    </Space>
+                </div>
             </Drawer>
         </>
     )

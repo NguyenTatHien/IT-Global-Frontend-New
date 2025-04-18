@@ -37,9 +37,7 @@ const CheckInOut: React.FC = () => {
         };
       }
 
-      console.log('Sending check-in request with location:', location);
       const response = await callCheckIn(location as any);
-      console.log('Check-in response:', response);
       message.success('Check-in thành công!');
       await dispatch(fetchAccount());
     } catch (error: any) {

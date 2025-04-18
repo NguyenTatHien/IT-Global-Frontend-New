@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Card, Space, message, Spin } from 'antd';
+import { Button, Card, Space, message, Spin, notification, Alert } from 'antd';
 import { useAppSelector } from '@/redux/hooks';
 import { useNavigate } from 'react-router-dom';
 import { callCheckIn, callCheckOut, callGetTodayAttendance } from '@/config/api';
@@ -26,6 +26,7 @@ interface IAttendance {
 const AttendanceActions: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [todayAttendance, setTodayAttendance] = useState<IAttendance | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
     const isAuthenticated = useAppSelector(state => state.account.isAuthenticated);
     const user = useAppSelector(state => state.account.user);
@@ -43,9 +44,13 @@ const AttendanceActions: React.FC = () => {
                 const response = await callGetTodayAttendance();
                 if (response.data) {
                     setTodayAttendance(response.data);
+                    setError(null);
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Error fetching today attendance:', error);
+                if (error.message === 'Không có ca làm việc hôm nay') {
+                    setError('Bạn không có ca làm việc nào trong hôm nay');
+                }
             }
         };
 
@@ -70,21 +75,33 @@ const AttendanceActions: React.FC = () => {
                     longitude: position.coords.longitude
                 };
             } catch (error) {
-                console.warn('Could not get location:', error);
-                // Continue without location
+                message.warning('Không thể lấy vị trí của bạn. Hệ thống sẽ tiếp tục check-in mà không có thông tin vị trí.');
             }
             
             const response = await callCheckIn({ location });
-
-            if (response?.data) {
-                setTodayAttendance(response.data);
-                message.success('Check-in thành công');
+            if (!response.data) {
+                throw new Error('Không nhận được dữ liệu từ server');
             }
+            setTodayAttendance(response.data);
+            message.success('Check-in thành công');
+            
         } catch (error: any) {
             console.error('Check-in error:', error);
-            message.error(error.response?.data?.message || error.message || 'Check-in thất bại');
             
-            if (error.response?.status === 401) {
+            let errorMessage = 'Check-in thất bại';
+            if (typeof error === 'string') {
+                errorMessage = error;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+
+            notification.error({
+                message: 'Không thể check-in',
+                description: errorMessage,
+                duration: 5
+            });
+            
+            if (error.status === 401) {
                 navigate('/login');
             }
         } finally {
@@ -101,16 +118,29 @@ const AttendanceActions: React.FC = () => {
             }
 
             const response = await callCheckOut();
-
-            if (response?.data) {
-                setTodayAttendance(response.data);
-                message.success('Check-out thành công');
+            if (!response.data) {
+                throw new Error('Không nhận được dữ liệu từ server');
             }
+            setTodayAttendance(response.data);
+            message.success('Check-out thành công');
+            
         } catch (error: any) {
             console.error('Check-out error:', error);
-            message.error(error.response?.data?.message || error.message || 'Check-out thất bại');
             
-            if (error.response?.status === 401) {
+            let errorMessage = 'Check-out thất bại';
+            if (typeof error === 'string') {
+                errorMessage = error;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+
+            notification.error({
+                message: 'Không thể check-out',
+                description: errorMessage,
+                duration: 5
+            });
+            
+            if (error.status === 401) {
                 navigate('/login');
             }
         } finally {
@@ -173,22 +203,69 @@ const AttendanceActions: React.FC = () => {
         }
     };
 
+    const renderShiftInfo = () => {
+        if (error) {
+            return (
+                <Alert
+                    message="Thông báo"
+                    description={error}
+                    type="warning"
+                    showIcon
+                    style={{ marginBottom: 16 }}
+                />
+            );
+        }
+
+        if (!todayAttendance && user?.userShiftId) {
+            return (
+                <Alert
+                    message="Thông tin ca làm việc"
+                    description={
+                        <>
+                            <p>Bạn chưa check-in hôm nay</p>
+                            <p>Ca làm việc: {user.userShiftId.name}</p>
+                            <p>Thời gian: {dayjs(user.userShiftId.startTime).format('HH:mm')} - {dayjs(user.userShiftId.endTime).format('HH:mm')}</p>
+                        </>
+                    }
+                    type="info"
+                    showIcon
+                    style={{ marginBottom: 16 }}
+                />
+            );
+        }
+
+        if (!user?.userShiftId) {
+            return (
+                <Alert
+                    message="Thông báo"
+                    description="Bạn chưa được phân ca làm việc. Vui lòng liên hệ quản lý."
+                    type="warning"
+                    showIcon
+                    style={{ marginBottom: 16 }}
+                />
+            );
+        }
+
+        return null;
+    };
+
     return (
         <Card title="Điểm danh" style={{ maxWidth: 400, margin: '20px auto' }}>
             <Spin spinning={loading}>
+                {renderShiftInfo()}
                 {renderAttendanceStatus()}
                 <Space style={{ marginTop: 16 }}>
                     <Button
                         type="primary"
                         onClick={handleCheckIn}
-                        disabled={!!todayAttendance}
+                        disabled={!!todayAttendance || !user?.userShiftId || !!error}
                     >
                         Check-in
                     </Button>
                     <Button
                         type="primary"
                         onClick={handleCheckOut}
-                        disabled={!todayAttendance || !!todayAttendance.checkOutTime}
+                        disabled={!todayAttendance || !!todayAttendance?.checkOutTime}
                     >
                         Check-out
                     </Button>

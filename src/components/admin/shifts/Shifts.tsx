@@ -6,8 +6,7 @@ import dayjs from 'dayjs';
 import { IBackendRes, IModelPaginate } from '@/types/backend';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { useNavigate } from 'react-router-dom';
-import DataTable from '@/components/share/data-table';
-import { ActionType, ProColumns } from '@ant-design/pro-components';
+import { ActionType, ProColumns, ProTable } from '@ant-design/pro-components';
 import queryString from 'query-string';
 
 interface IShift {
@@ -108,33 +107,45 @@ const ShiftManagement: React.FC = () => {
     };
 
     const buildQuery = (params: any, sort: any, filter: any) => {
-        const clone = { ...params };
-        if (clone.name) clone.name = `/${clone.name}/i`;
+        // Handle pagination
+        const { current, pageSize, ...restParams } = params;
+        const queryParams = new URLSearchParams();
 
-        let temp = queryString.stringify(clone);
+        // Add pagination params
+        queryParams.append('current', current?.toString() || '1');
+        queryParams.append('pageSize', pageSize?.toString() || '10');
 
-        let sortBy = "";
-        if (sort && sort.name) {
-            sortBy = sort.name === 'ascend' ? "sort=name" : "sort=-name";
-        }
-        if (sort && sort.startTime) {
-            sortBy = sort.startTime === 'ascend' ? "sort=startTime" : "sort=-startTime";
-        }
-        if (sort && sort.endTime) {
-            sortBy = sort.endTime === 'ascend' ? "sort=endTime" : "sort=-endTime";
-        }
-        if (sort && sort.status) {
-            sortBy = sort.status === 'ascend' ? "sort=status" : "sort=-status";
+        // Build search query
+        const searchQuery: any = {};
+
+        // Handle text search
+        if (restParams.name) {
+            searchQuery.name = {
+                $regex: restParams.name.trim(),
+                $options: 'i'
+            };
         }
 
-        //mặc định sort theo updatedAt
-        if (Object.keys(sortBy).length === 0) {
-            temp = `${temp}&sort=-updatedAt`;
+        // Handle status filter
+        if (restParams.status) {
+            searchQuery.status = restParams.status;
+        }
+
+        // Handle sort
+        if (sort && Object.keys(sort).length > 0) {
+            const sortField = Object.keys(sort)[0];
+            const sortOrder = sort[sortField] === 'ascend' ? 1 : -1;
+            searchQuery.sort = { [sortField]: sortOrder };
         } else {
-            temp = `${temp}&${sortBy}`;
+            searchQuery.sort = { updatedAt: -1 };
         }
 
-        return temp;
+        // Add search query to URL params
+        if (Object.keys(searchQuery).length > 0) {
+            queryParams.append('qs', JSON.stringify(searchQuery));
+        }
+
+        return queryParams.toString();
     };
 
     const statusOptions = [
@@ -223,29 +234,70 @@ const ShiftManagement: React.FC = () => {
         }
     ];
 
+    const request = async (params: {
+        current?: number;
+        pageSize?: number;
+        filter?: Record<string, any>;
+        sort?: Record<string, any>;
+    }) => {
+        setLoading(true);
+        try {
+            const query = buildQuery(params, params.sort || {}, params.filter || {});
+            const res = await callGetShifts(query);
+            if (res?.data?.result) {
+                setShifts(res.data.result);
+                setMeta({
+                    current: res.data.meta.current,
+                    pageSize: res.data.meta.pageSize,
+                    total: res.data.meta.total,
+                    pages: res.data.meta.pages
+                });
+                return {
+                    data: res.data.result,
+                    success: true,
+                    total: res.data.meta.total
+                };
+            }
+            return {
+                data: [],
+                success: true,
+                total: 0
+            };
+        } catch (error) {
+            message.error('Có lỗi xảy ra khi tải dữ liệu');
+            return {
+                data: [],
+                success: false,
+                total: 0
+            };
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div>
-            <DataTable<IShift>
+            <ProTable<IShift>
                 actionRef={tableRef}
                 headerTitle="Danh sách ca làm việc"
                 rowKey="_id"
                 loading={loading}
                 columns={columns}
                 dataSource={shifts}
-                request={async (params, sort, filter): Promise<any> => {
-                    const query = buildQuery(params, sort, filter);
-                    const res = await callGetShifts(query);
-                    if (res?.data) {
-                        setShifts(res.data.result);
-                        setMeta({
-                            current: res.data.meta.current,
-                            pageSize: res.data.meta.pageSize,
-                            total: res.data.meta.total,
-                            pages: res.data.meta.pages
-                        });
-                    }
-                    return res;
+                search={{
+                    labelWidth: 'auto',
+                    defaultCollapsed: false,
+                    layout: 'vertical',
+                    span: {
+                        xs: 24,
+                        sm: 12,
+                        md: 8,
+                        lg: 6,
+                        xl: 6,
+                        xxl: 6
+                    },
                 }}
+                request={request}
                 scroll={{ x: true }}
                 pagination={{
                     current: meta.current,

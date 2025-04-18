@@ -33,7 +33,8 @@ export interface IAccount {
             apiPath: string;
             method: string;
             module: string;
-        }[]
+        }[];
+        userShiftId?: IUserShift;
     }
 }
 
@@ -50,6 +51,13 @@ export interface ICompany {
     deletedAt?: boolean | null;
     createdAt?: string;
     updatedAt?: string;
+}
+
+export interface IUserShift {
+    _id: string;
+    name: string;
+    startTime: string;
+    endTime: string;
 }
 
 export interface IUser {
@@ -71,7 +79,9 @@ export interface IUser {
         method: string;
         module: string;
     }[];
+    userShiftId?: IUserShift;
     faceDescriptor?: number[];
+    employeeType: 'official' | 'contract' | 'intern';
     age?: number;
     gender?: string;
     address?: string;
@@ -79,8 +89,6 @@ export interface IUser {
     updatedAt?: string;
     image?: string;
 }
-
-
 
 export interface IPermission {
     _id?: string;
@@ -122,3 +130,36 @@ export interface ISubscribers {
     createdAt?: string;
     updatedAt?: string;
 }
+
+export interface IAttendanceData {
+    data: {
+        meta: {
+            current: number;
+            pageSize: number;
+            total: number;
+        };
+        result: Array<{
+            _id: string;
+            userId: string;
+            checkInTime: string;
+            checkOutTime?: string;
+            status: 'on-time' | 'late' | 'early' | 'absent';
+            totalHours: string;
+            overtimeHours: number;
+            lateMinutes: number;
+            earlyMinutes: number;
+            userShiftId: {
+                _id: string;
+                name: string;
+                startTime: string;
+                endTime: string;
+                shiftId?: {
+                    _id: string;
+                    name: string;
+                    startTime: string;
+                    endTime: string;
+                }
+            } | null;
+        }>;
+    };
+} 

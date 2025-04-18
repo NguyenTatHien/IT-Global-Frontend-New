@@ -10,6 +10,13 @@ export const fetchAccount = createAsyncThunk(
     }
 )
 
+interface IUserShift {
+    _id: string;
+    name: string;
+    startTime: string;
+    endTime: string;
+}
+
 interface IState {
     isAuthenticated: boolean;
     isLoading: boolean;
@@ -30,7 +37,8 @@ interface IState {
             apiPath: string;
             method: string;
             module: string;
-        }[]
+        }[];
+        userShiftId?: IUserShift;
     };
     activeMenu: string;
 }
@@ -49,12 +57,12 @@ const initialState: IState = {
             name: "",
         },
         permissions: [],
-        company: undefined
+        company: undefined,
+        userShiftId: undefined
     },
 
     activeMenu: 'home'
 };
-
 
 export const accountSlide = createSlice({
     name: 'account',
@@ -73,6 +81,7 @@ export const accountSlide = createSlice({
             state.user.name = action.payload.name;
             state.user.role = action?.payload?.role;
             state.user.permissions = action?.payload?.permissions;
+            state.user.userShiftId = action?.payload?.userShiftId;
         },
         setLogoutAction: (state, action) => {
             localStorage.removeItem('access_token');
@@ -82,6 +91,7 @@ export const accountSlide = createSlice({
                 email: "", 
                 name: "",
                 company: undefined,
+                userShiftId: undefined,
                 role: {
                     _id: "",
                     name: "",
@@ -113,6 +123,7 @@ export const accountSlide = createSlice({
                 state.user.name = action.payload.user?.name;
                 state.user.role = action?.payload?.user?.role;
                 state.user.permissions = action?.payload?.user?.permissions;
+                state.user.userShiftId = action?.payload?.user?.userShiftId;
             }
         })
 

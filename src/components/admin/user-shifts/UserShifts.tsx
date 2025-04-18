@@ -1,14 +1,12 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, ReactNode } from 'react';
 import { Button, Space, Modal, Form, Input, DatePicker, message, Popconfirm, Select, Tag } from 'antd';
 import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { callCreateUserShift, callDeleteUserShift, callGetUserShifts, callUpdateUserShift, callGetUsers, callGetShifts } from '@/config/api';
+import { callCreateUserShift, callDeleteUserShift, callGetUserShifts, callUpdateUserShift, callGetUsers, callGetShifts, callGetUserShiftById } from '@/config/api';
 import dayjs from 'dayjs';
-import { IBackendRes, IModelPaginate, IUser } from '@/types/backend';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { useNavigate } from 'react-router-dom';
-import DataTable from '@/components/share/data-table';
+import { ProTable } from '@ant-design/pro-components';
 import { ActionType, ProColumns } from '@ant-design/pro-components';
-import queryString from 'query-string';
 
 interface IShift {
     _id: string;
@@ -23,6 +21,7 @@ interface IUserShift {
         _id: string;
         name: string;
         email: string;
+        employeeType: string;
     };
     shiftId: {
         _id: string;
@@ -32,6 +31,37 @@ interface IUserShift {
     };
     date: string;
     status: 'active' | 'inactive' | 'pending';
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+interface Meta {
+    currentPage: number;
+    itemsPerPage: number;
+    totalItems: number;
+    totalPages: number;
+}
+
+interface QueryParams {
+    current?: number;
+    pageSize?: number;
+    filter?: {
+        userId?: { name?: string };
+        shiftId?: { name?: string };
+        date?: string;
+        status?: string;
+    };
+    sort?: Record<string, 1 | -1>;
+}
+
+interface QueryObject {
+    'userId.name'?: string;
+    'shiftId.name'?: string;
+    date?: string;
+    status?: string;
+    sort?: Record<string, 1 | -1>;
+    page: number;
+    limit: number;
 }
 
 const UserShiftManagement: React.FC = () => {
@@ -39,15 +69,16 @@ const UserShiftManagement: React.FC = () => {
     const [users, setUsers] = useState<any[]>([]);
     const [shifts, setShifts] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [isSearchCollapsed, setIsSearchCollapsed] = useState<boolean>(true);
     const [form] = Form.useForm();
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [isModalLoading, setIsModalLoading] = useState<boolean>(false);
     const [editData, setEditData] = useState<any>(null);
-    const [meta, setMeta] = useState({
-        current: 1,
-        pageSize: 10,
-        total: 0,
-        pages: 0
+    const [meta, setMeta] = useState<Meta>({
+        currentPage: 1,
+        itemsPerPage: 10,
+        totalItems: 0,
+        totalPages: 0
     });
 
     const tableRef = useRef<ActionType>();
@@ -71,10 +102,14 @@ const UserShiftManagement: React.FC = () => {
             ]);
 
             if (usersRes?.data?.result) {
-                const userOptions = usersRes.data.result.map((user: any) => ({
-                    label: `${user.name} (${user.email})`,
-                    value: user._id
-                }));
+                const userOptions = usersRes.data.result
+                    .filter((user: any) => user.employeeType !== 'intern')
+                    .map((user: any) => ({
+                        label: `${user.name} (${user.email})${user.employeeType === 'official' ? ' - Nhân viên chính thức' : 
+                               user.employeeType === 'contract' ? ' - Nhân viên hợp đồng' : ''}`,
+                        value: user._id,
+                        employeeType: user.employeeType
+                    }));
                 setUsers(userOptions);
             }
 
@@ -98,15 +133,25 @@ const UserShiftManagement: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    const handleEdit = (record: IUserShift) => {
-        setEditData(record);
-        form.setFieldsValue({
-            userId: record.userId?._id,
-            shiftId: record.shiftId?._id,
-            date: dayjs(record.date),
-            status: record.status
-        });
-        setIsModalOpen(true);
+    const handleEdit = async (record: IUserShift) => {
+        try {
+            setLoading(true);
+            const res = await callGetUserShiftById(record._id);
+            if (res?.data) {
+                setEditData(res.data);
+                form.setFieldsValue({
+                    userId: res.data.userId?._id,
+                    shiftId: res.data.shiftId?._id,
+                    date: dayjs(res.data.date),
+                    status: res.data.status
+                });
+                setIsModalOpen(true);
+            }
+        } catch (error) {
+            message.error('Có lỗi xảy ra khi tải thông tin phân ca');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleDelete = async (id: string) => {
@@ -124,46 +169,50 @@ const UserShiftManagement: React.FC = () => {
     const handleSubmit = async (values: any) => {
         setIsModalLoading(true);
         try {
-            console.log('Form values:', values);
             const { date, ...rest } = values;
             
+            // Kiểm tra loại nhân viên và ngày được chọn
+            const selectedUser = users.find(user => user.value === rest.userId);
+            if (selectedUser?.employeeType === 'official') {
+                const selectedDate = date.day();
+                if (selectedDate === 0 || selectedDate === 6) {
+                    message.error('Nhân viên chính thức chỉ được phân ca từ thứ 2 đến thứ 6');
+                    setIsModalLoading(false);
+                    return;
+                }
+            }
+
             // Format date to YYYY-MM-DD format
             const formatData = {
                 userId: rest.userId,
                 shiftId: rest.shiftId,
                 date: date.format('YYYY-MM-DD'),
-                status: rest.status
+                status: rest.status || 'active'
             };
-            console.log('Formatted data:', formatData);
 
             let response;
             if (editData?._id) {
-                console.log('Updating user shift:', editData._id);
                 response = await callUpdateUserShift(editData._id, formatData);
-                console.log('Update response:', response);
-                
                 if (response?.data?.statusCode === 200) {
                     message.success(response.data.message || 'Cập nhật phân ca thành công');
                     setIsModalOpen(false);
                     form.resetFields();
-                    await reloadTable();  // Đợi reload table hoàn thành
+                    await reloadTable();
                 } else {
-                    console.error('Update failed:', response);
                     throw new Error(response?.data?.message || 'Có lỗi xảy ra khi cập nhật phân ca');
                 }
             } else {
                 response = await callCreateUserShift(formatData);
-                if (response?.data?.statusCode === 201) {
-                    message.success('Thêm phân ca thành công');
+                if (response?.data?.statusCode === 200) {
+                    message.success(response.data.message || 'Thêm phân ca thành công');
                     setIsModalOpen(false);
                     form.resetFields();
-                    await reloadTable();  // Đợi reload table hoàn thành
+                    await reloadTable();
                 } else {
                     throw new Error(response?.data?.message || 'Có lỗi xảy ra khi thêm phân ca');
                 }
             }
         } catch (error: any) {
-            console.error('Error in handleSubmit:', error);
             message.error(error.response?.data?.message || error.message || 'Có lỗi xảy ra khi lưu phân ca');
         } finally {
             setIsModalLoading(false);
@@ -173,39 +222,51 @@ const UserShiftManagement: React.FC = () => {
     const reloadTable = async () => {
         try {
             await tableRef?.current?.reload();
-            // Fetch lại data sau khi reload
-            const res = await callGetUserShifts(buildQuery({}, {}, {}));
+            const res = await callGetUserShifts(buildQuery({}));
             if (res?.data?.result) {
                 setUserShifts(res.data.result);
             }
         } catch (error) {
-            console.error('Error reloading table:', error);
+            // Error handling without console.log
         }
     };
 
-    const buildQuery = (params: any, sort: any, filter: any) => {
-        const clone = { ...params };
-        let temp = queryString.stringify(clone);
+    const buildQuery = (params: QueryParams) => {
+        const { current, pageSize, filter, sort } = params;
+        const query: QueryObject = {
+            page: current || 1,
+            limit: pageSize || 10
+        };
 
-        let sortBy = "";
-        if (sort && sort.userId) {
-            sortBy = sort.userId === 'ascend' ? "sort=userId.name" : "sort=-userId.name";
-        }
-        if (sort && sort.shiftId) {
-            sortBy = sort.shiftId === 'ascend' ? "sort=shiftId.name" : "sort=-shiftId.name";
-        }
-        if (sort && sort.date) {
-            sortBy = sort.date === 'ascend' ? "sort=date" : "sort=-date";
-        }
-        if (sort && sort.status) {
-            sortBy = sort.status === 'ascend' ? "sort=status" : "sort=-status";
-        }
-
-        if (sortBy) {
-            temp = `${temp}&${sortBy}`;
+        // Handle search filters
+        if (filter) {
+            if (filter.userId?.name) {
+                query['userId.name'] = filter.userId.name;
+            }
+            if (filter.shiftId?.name) {
+                query['shiftId.name'] = filter.shiftId.name;
+            }
+            if (filter.date) {
+                query.date = filter.date;
+            }
+            if (filter.status) {
+                query.status = filter.status;
+            }
         }
 
-        return temp;
+        // Handle sorting
+        if (sort) {
+            query.sort = sort;
+        } else {
+            query.sort = { createdAt: -1 };
+        }
+
+        const searchParams = new URLSearchParams();
+        Object.entries(query).forEach(([key, value]) => {
+            searchParams.append(key, JSON.stringify(value));
+        });
+
+        return searchParams.toString();
     };
 
     const statusOptions = [
@@ -214,7 +275,15 @@ const UserShiftManagement: React.FC = () => {
         { label: 'Chờ xử lý', value: 'pending' }
     ];
 
-    const getStatusColor = (status: string) => {
+    const getStatusColor = (status: string, date: string) => {
+        const shiftDate = dayjs(date).startOf('day');
+        const today = dayjs().startOf('day');
+        
+        // Nếu ngày phân ca đã qua
+        if (shiftDate.isBefore(today)) {
+            return 'red';
+        }
+
         switch (status) {
             case 'active':
                 return 'green';
@@ -227,7 +296,15 @@ const UserShiftManagement: React.FC = () => {
         }
     };
 
-    const getStatusText = (status: string) => {
+    const getStatusText = (status: string, date: string) => {
+        const shiftDate = dayjs(date).startOf('day');
+        const today = dayjs().startOf('day');
+        
+        // Nếu ngày phân ca đã qua
+        if (shiftDate.isBefore(today)) {
+            return 'Ngừng hoạt động';
+        }
+
         switch (status) {
             case 'active':
                 return 'Đang hoạt động';
@@ -244,49 +321,68 @@ const UserShiftManagement: React.FC = () => {
         {
             title: 'Nhân viên',
             dataIndex: ['userId', 'name'],
-            sorter: true,
-            render: (_: any, record: IUserShift) => record.userId?.name || '-'
+            key: 'userId',
+            width: 200,
+            render: (_, record) => (
+                <Space direction="vertical" size={0}>
+                    <div>{record.userId?.name}</div>
+                    <div style={{ fontSize: '12px', color: '#666' }}>{record.userId?.email}</div>
+                </Space>
+            )
         },
         {
             title: 'Ca làm việc',
             dataIndex: ['shiftId', 'name'],
+            key: 'shiftId',
             sorter: true,
             render: (_: any, record: IUserShift) => record.shiftId?.name || '-'
         },
         {
             title: 'Ngày',
             dataIndex: 'date',
+            key: 'date',
             sorter: true,
-            render: (dom: any, entity: IUserShift) => dayjs(entity.date).format('DD/MM/YYYY')
+            render: (_: any, record: IUserShift) => dayjs(record.date).format('DD/MM/YYYY'),
+            renderFormItem: () => (
+                <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} />
+            )
         },
         {
             title: 'Trạng thái',
             dataIndex: 'status',
+            key: 'status',
             sorter: true,
-            render: (dom: any, entity: IUserShift) => (
-                <Tag color={getStatusColor(entity.status)}>
-                    {getStatusText(entity.status)}
+            render: (_: any, record: IUserShift) => (
+                <Tag color={getStatusColor(record.status, record.date)}>
+                    {getStatusText(record.status, record.date)}
                 </Tag>
+            ),
+            renderFormItem: () => (
+                <Select
+                    placeholder="Chọn trạng thái"
+                    options={statusOptions}
+                />
             )
         },
         {
             title: 'Thao tác',
+            key: 'action',
             hideInSearch: true,
             width: 50,
-            render: (_value, entity, _index, _action) => (
+            render: (_: any, record: IUserShift) => (
                 <Space>
                     <EditOutlined
                         style={{
                             fontSize: 20,
                             color: '#ffa500',
                         }}
-                        onClick={() => handleEdit(entity)}
+                        onClick={() => handleEdit(record)}
                     />
                     <Popconfirm
                         placement="topLeft"
                         title="Xác nhận xóa phân ca này?"
                         description="Bạn có chắc chắn muốn xóa phân ca này không?"
-                        onConfirm={() => handleDelete(entity._id)}
+                        onConfirm={() => handleDelete(record._id)}
                         okText="Xác nhận"
                         cancelText="Hủy"
                     >
@@ -302,65 +398,92 @@ const UserShiftManagement: React.FC = () => {
         }
     ];
 
+    const toolBarRender = (): ReactNode[] => {
+        return [
+            <Button
+                key="add"
+                icon={<PlusOutlined />}
+                type="primary"
+                onClick={handleAdd}
+            >
+                Thêm mới
+            </Button>
+        ];
+    };
+
+    const request = async (params: {
+        current?: number;
+        pageSize?: number;
+        filter?: Record<string, any>;
+        sort?: Record<string, any>;
+    }) => {
+        setLoading(true);
+        try {
+            const qs = buildQuery(params);
+            const response = await callGetUserShifts(qs);
+            if (response?.data?.result) {
+                setUserShifts(response.data.result);
+                if (response.meta) {
+                    setMeta(response.meta);
+                }
+                return {
+                    data: response.data.result,
+                    success: true,
+                    total: response.meta?.totalItems || 0
+                };
+            }
+            return {
+                data: [],
+                success: true,
+                total: 0
+            };
+        } catch (error) {
+            // Error handling without console.log
+            return {
+                data: [],
+                success: false,
+                total: 0
+            };
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div>
-            <DataTable<IUserShift>
+            <ProTable<IUserShift>
                 actionRef={tableRef}
                 headerTitle="Danh sách phân ca nhân viên"
                 rowKey="_id"
                 loading={loading}
                 columns={columns}
                 dataSource={userShifts}
-                request={async (params, sort, filter): Promise<any> => {
-                    const query = buildQuery(params, sort, filter);
-                    const res = await callGetUserShifts(query);
-                    if (res?.data?.result) {
-                        setUserShifts(res.data.result);
-                        setMeta({
-                            current: res.data.meta.current,
-                            pageSize: res.data.meta.pageSize,
-                            total: res.data.meta.total,
-                            pages: res.data.meta.pages
-                        });
-                        return {
-                            data: res.data.result,
-                            success: true,
-                            total: res.data.meta.total
-                        };
-                    }
-                    return {
-                        data: [],
-                        success: false,
-                        total: 0
-                    };
+                search={{
+                    labelWidth: 'auto',
+                    defaultCollapsed: true,
+                    layout: 'vertical',
+                    span: {
+                        xs: 24,
+                        sm: 12,
+                        md: 8,
+                        lg: 6,
+                        xl: 6,
+                        xxl: 6
+                    },
                 }}
-                scroll={{ x: true }}
+                request={request}
                 pagination={{
-                    current: meta.current,
-                    pageSize: meta.pageSize,
-                    showSizeChanger: true,
-                    total: meta.total,
-                    showTotal: (total: number, range: number[]) => { return (<div> {range[0]}-{range[1]} trên {total} rows</div>) }
+                    current: meta?.currentPage || 1,
+                    pageSize: meta?.itemsPerPage || 10,
+                    total: meta?.totalItems || 0,
                 }}
-                rowSelection={false}
-                toolBarRender={(_action: any, _rows: any): any => {
-                    return (
-                        <Button
-                            icon={<PlusOutlined />}
-                            type="primary"
-                            onClick={handleAdd}
-                        >
-                            Thêm mới
-                        </Button>
-                    );
-                }}
+                toolBarRender={toolBarRender}
             />
 
             <Modal
                 title={editData?._id ? "Cập nhật phân ca" : "Thêm mới phân ca"}
                 open={isModalOpen}
                 onOk={() => {
-                    console.log('Current form values:', form.getFieldsValue());
                     form.submit();
                 }}
                 onCancel={() => {

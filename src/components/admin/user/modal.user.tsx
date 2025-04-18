@@ -184,7 +184,7 @@ const ModalUser = (props: IProps) => {
             return;
         }
 
-        const { name, email, password, address, age, gender, role } = valuesForm;
+        const { name, email, password, address, age, gender, role, employeeType } = valuesForm;
         const file = dataFaceImage[0]?.originFileObj;
 
         const user: IUser = {
@@ -195,10 +195,15 @@ const ModalUser = (props: IProps) => {
             gender,
             address,
             role: role?.value || dataInit?.role?._id,
-            faceDescriptor,
-            image: imageName,
+            employeeType,
             permissions: [],
         };
+
+        // Only include image and faceDescriptor if they have been changed
+        if (imageName && imageName !== dataInit?.image) {
+            user.image = imageName;
+            user.faceDescriptor = faceDescriptor;
+        }
 
         try {
             setLoading(true);
@@ -303,7 +308,7 @@ const ModalUser = (props: IProps) => {
                     }
                 }}
             >
-                <Row gutter={16}>
+                <Row gutter={24}>
                     <Col lg={12} md={12} sm={24} xs={24}>
                         <ProFormText
                             label="Email"
@@ -373,6 +378,20 @@ const ModalUser = (props: IProps) => {
                                 style={{ width: "100%" }}
                             />
                         </ProForm.Item>
+                    </Col>
+                    <Col lg={6} md={6} sm={24} xs={24}>
+                        <ProFormSelect
+                            name="employeeType"
+                            label="Loại nhân viên"
+                            valueEnum={{
+                                official: "Nhân viên chính thức",
+                                contract: "Nhân viên hợp đồng",
+                                intern: "Thực tập sinh",
+                            }}
+                            placeholder="Chọn loại nhân viên"
+                            rules={[{ required: true, message: "Vui lòng chọn loại nhân viên!" }]}
+                            initialValue="official"
+                        />
                     </Col>
                     <Col lg={12} md={12} sm={24} xs={24}>
                         <ProFormText

@@ -1,4 +1,4 @@
-import { IBackendRes, IAccount, IUser, IModelPaginate, IGetAccount, IPermission, IRole } from '@/types/backend';
+import { IBackendRes, IAccount, IUser, IModelPaginate, IGetAccount, IPermission, IRole, IAttendanceData } from '@/types/backend';
 import axios from 'config/axios-customize';
 import axiosClient from 'config/axios-customize';
 
@@ -8,18 +8,6 @@ Module Auth
  */
 export const callRegister = (name: string, email: string, password: string, age: number, gender: string, address: string, file: File) => {
     const formData = new FormData();
-    
-    // Log the data being sent
-    console.log('Sending registration data:', {
-        name,
-        email,
-        password,
-        age,
-        gender,
-        address,
-        fileSize: file.size,
-        fileType: file.type
-    });
 
     // Append all fields to FormData
     formData.append('name', name);
@@ -29,11 +17,6 @@ export const callRegister = (name: string, email: string, password: string, age:
     formData.append('gender', gender);
     formData.append('address', address);
     formData.append('image', file);
-
-    // Log the FormData contents
-    for (let pair of formData.entries()) {
-        console.log(pair[0] + ': ' + pair[1]);
-    }
 
     return axios.post<IBackendRes<IUser>>('/api/v1/auth/register', formData, {
         headers: {
@@ -85,14 +68,6 @@ export const callLoginWithFaceId = async (fileDescriptor: File) => {
                 throw new Error('File không hợp lệ');
             }
 
-            // Log request details for debugging
-            console.log('Login request details:', {
-                fileName: fileDescriptor.name,
-                fileSize: fileDescriptor.size,
-                fileType: fileDescriptor.type,
-                attempt: retryCount + 1
-            });
-
             const formData = new FormData();
             formData.append('image', fileDescriptor);
 
@@ -110,9 +85,6 @@ export const callLoginWithFaceId = async (fileDescriptor: File) => {
                     }
                 }
             );
-
-            // Log full response for debugging
-            console.log('Server response:', response.data);
 
             // Check for specific error messages in response
             if (response.data?.message?.includes('Invalid response format') || 
@@ -140,7 +112,6 @@ export const callLoginWithFaceId = async (fileDescriptor: File) => {
             if (error.code === 'ECONNABORTED') {
                 if (retryCount < MAX_RETRIES) {
                     retryCount++;
-                    console.log(`Retrying login attempt ${retryCount} after ${RETRY_DELAY}ms...`);
                     await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
                     return attemptLogin();
                 }
@@ -308,9 +279,31 @@ export const callCreateUserShift = (data: any) => {
     return axios.post<IBackendRes<any>>('/api/v1/user-shifts', data);
 }
 
-export const callGetUserShifts = (query: string = '') => {
-    return axios.get<IBackendRes<IModelPaginate<any>>>(`/api/v1/user-shifts?${query}`);
+export const callGetUserShifts = (query: string) => {
+    return axios.get(`/api/v1/user-shifts?${query}`, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem('access_token')}`
+        }
+    });
 }
+
+export const callGetMyShifts = () => {
+    return axios.get('/api/v1/user-shifts/my-shifts');
+}
+
+export const callGetUserShiftById = async (id: string) => {
+    try {
+        const res = await axios.get(`/api/v1/user-shifts/${id}`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('access_token')}`
+            }
+        });
+        return res;
+    } catch (error) {
+        console.error('Error fetching user shift by id:', error);
+        throw error;
+    }
+};
 
 export const callUpdateUserShift = (id: string, data: any) => {
     return axios.patch<IBackendRes<any>>(`/api/v1/user-shifts/${id}`, data);
@@ -354,5 +347,5 @@ export const callGetTodayAttendance = () => {
 }
 
 export const callGetMyAttendance = (query: string) => {
-    return axios.get<IBackendRes<IModelPaginate<IAttendanceResponse>>>(`/api/v1/attendance/my?${query}`);
+    return axios.get<IBackendRes<IAttendanceData>>(`/api/v1/attendance/my-attendance?${query}`);
 }

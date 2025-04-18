@@ -51,46 +51,40 @@ instance.interceptors.request.use(function (config) {
 instance.interceptors.response.use(
     (res) => res.data,
     async (error) => {
-        if (error.config && error.response
-            && +error.response.status === 401
-            && error.config.url !== '/api/v1/auth/login'
-            && !error.config.headers[NO_RETRY_HEADER]
-        ) {
-            const access_token = await handleRefreshToken();
-            error.config.headers[NO_RETRY_HEADER] = 'true'
-            if (access_token) {
-                error.config.headers['Authorization'] = `Bearer ${access_token}`;
-                localStorage.setItem('access_token', access_token)
-                return instance.request(error.config);
+        // Handle 401 Unauthorized error
+        if (error.response && error.response.status === 401) {
+            if (error.config.url !== '/api/v1/auth/login' && !error.config.headers[NO_RETRY_HEADER]) {
+                const access_token = await handleRefreshToken();
+                error.config.headers[NO_RETRY_HEADER] = 'true'
+                if (access_token) {
+                    error.config.headers['Authorization'] = `Bearer ${access_token}`;
+                    localStorage.setItem('access_token', access_token)
+                    return instance.request(error.config);
+                }
             }
+            localStorage.removeItem('access_token');
+            window.location.href = '/login';
+            return Promise.reject(error);
         }
 
-        if (
-            error.config && error.response
-            && +error.response.status === 400
+        // Handle refresh token error
+        if (error.config && error.response?.status === 400 
             && error.config.url === '/api/v1/auth/refresh'
             && location.pathname.startsWith("/admin")
         ) {
             const message = error?.response?.data?.message ?? "Có lỗi xảy ra, vui lòng login.";
-            //dispatch redux action
             store.dispatch(setRefreshTokenAction({ status: true, message }));
         }
 
-        return error?.response?.data ?? Promise.reject(error);
+        // Return error response data if available
+        if (error.response?.data) {
+            return Promise.reject(error.response.data);
+        }
+
+        // Otherwise reject with the error
+        return Promise.reject(error);
     }
 );
-
-// Add a response interceptor
-instance.interceptors.response.use(function (response) {
-    return response;
-}, function (error) {
-    // Handle 401 Unauthorized error
-    if (error.response && error.response.status === 401) {
-        localStorage.removeItem('access_token');
-        window.location.href = '/login';
-    }
-    return Promise.reject(error);
-});
 
 /**
  * Replaces main `axios` instance with the custom-one.
