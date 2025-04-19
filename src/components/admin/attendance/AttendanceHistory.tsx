@@ -208,6 +208,42 @@ const AttendanceHistory: FC = () => {
         }
     };
 
+    const formatTimeDisplay = (minutes: number): string => {
+        if (!minutes || minutes <= 0) return '-';
+        
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = minutes % 60;
+        
+        if (hours > 0) {
+            if (remainingMinutes > 0) {
+                return `${hours} giờ ${remainingMinutes} phút`;
+            }
+            return `${hours} giờ`;
+        }
+        return `${remainingMinutes} phút`;
+    };
+
+    const formatWorkHours = (hours: string | number): string => {
+        if (!hours) return '-';
+        
+        const totalHours = typeof hours === 'string' ? parseFloat(hours) : hours;
+        if (totalHours <= 0) return '-';
+        
+        const wholeHours = Math.floor(totalHours);
+        const minutes = Math.round((totalHours - wholeHours) * 60);
+        
+        if (wholeHours > 0) {
+            if (minutes > 0) {
+                return `${wholeHours} giờ ${minutes} phút`;
+            }
+            return `${wholeHours} giờ`;
+        }
+        if (minutes > 0) {
+            return `${minutes} phút`;
+        }
+        return '-';
+    };
+
     const columns = [
         {
             title: 'Ngày',
@@ -285,21 +321,25 @@ const AttendanceHistory: FC = () => {
             title: 'Đi muộn',
             dataIndex: 'lateMinutes',
             key: 'lateMinutes',
-            width: 100,
+            width: 120,
             sorter: true,
-            render: (minutes: number) => minutes > 0 ? (
-                <Text type="warning">{minutes} phút</Text>
-            ) : '-'
+            render: (minutes: number) => (
+                <Text type={minutes > 0 ? "warning" : undefined}>
+                    {formatTimeDisplay(minutes)}
+                </Text>
+            )
         },
         {
             title: 'Về sớm',
             dataIndex: 'earlyMinutes',
             key: 'earlyMinutes',
-            width: 100,
+            width: 120,
             sorter: true,
-            render: (minutes: number) => minutes > 0 ? (
-                <Text type="warning">{minutes} phút</Text>
-            ) : '-'
+            render: (minutes: number) => (
+                <Text type={minutes > 0 ? "warning" : undefined}>
+                    {formatTimeDisplay(minutes)}
+                </Text>
+            )
         },
         {
             title: 'Số giờ làm',
@@ -307,9 +347,11 @@ const AttendanceHistory: FC = () => {
             key: 'totalHours',
             width: 120,
             sorter: true,
-            render: (hours: string) => hours ? (
-                <Text strong>{hours} giờ</Text>
-            ) : '-'
+            render: (hours: string) => (
+                <Text strong>
+                    {formatWorkHours(hours)}
+                </Text>
+            )
         },
         {
             title: 'Tăng ca',
