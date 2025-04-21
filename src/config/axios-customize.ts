@@ -63,7 +63,7 @@ instance.interceptors.response.use(
                 }
             }
             localStorage.removeItem('access_token');
-            window.location.href = '/login';
+            window.location.href = '/face-id-login';
             return Promise.reject(error);
         }
 

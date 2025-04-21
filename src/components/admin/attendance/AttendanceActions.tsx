@@ -36,7 +36,7 @@ const AttendanceActions: React.FC = () => {
             const token = localStorage.getItem('access_token');
             if (!isAuthenticated || !token) {
                 message.error('Vui lòng đăng nhập để tiếp tục');
-                navigate('/login');
+                navigate('/face-id-login');
                 return;
             }
 
@@ -102,7 +102,7 @@ const AttendanceActions: React.FC = () => {
             });
             
             if (error.status === 401) {
-                navigate('/login');
+                navigate('/face-id-login');
             }
         } finally {
             setLoading(false);
@@ -141,7 +141,7 @@ const AttendanceActions: React.FC = () => {
             });
             
             if (error.status === 401) {
-                navigate('/login');
+                navigate('/face-id-login');
             }
         } finally {
             setLoading(false);

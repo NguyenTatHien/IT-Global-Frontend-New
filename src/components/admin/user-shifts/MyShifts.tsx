@@ -34,7 +34,7 @@ const MyShifts: React.FC = () => {
 
     useEffect(() => {
         if (!user?._id) {
-            navigate('/login');
+            navigate('/face-id-login');
             return;
         }
         fetchMyShifts();

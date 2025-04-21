@@ -38,7 +38,7 @@ const ShiftManagement: React.FC = () => {
 
     useEffect(() => {
         if (!isAuthenticated) {
-            navigate('/login');
+            navigate('/face-id-login');
         }
     }, [isAuthenticated]);
 

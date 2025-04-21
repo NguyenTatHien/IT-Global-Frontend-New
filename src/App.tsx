@@ -33,7 +33,9 @@ export default function App() {
   useEffect(() => {
     if (
       window.location.pathname === '/login'
-      || window.location.pathname === '/register'
+      || window.location.pathname === '/register' ||
+      window.location.pathname === '/face-id-login' ||
+      window.location.pathname === '/face-id-register'
     )
       return;
     dispatch(fetchAccount())

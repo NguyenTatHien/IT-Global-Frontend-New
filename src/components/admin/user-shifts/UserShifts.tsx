@@ -88,7 +88,7 @@ const UserShiftManagement: React.FC = () => {
 
     useEffect(() => {
         if (!isAuthenticated) {
-            navigate('/login');
+            navigate('/face-id-login');
         }
         fetchUsersAndShifts();
     }, [isAuthenticated]);

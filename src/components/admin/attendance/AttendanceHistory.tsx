@@ -73,7 +73,7 @@ const AttendanceHistory: FC = () => {
     useEffect(() => {
         if (!isAuthenticated) {
             message.error('Vui lòng đăng nhập để xem lịch sử chấm công');
-            navigate('/login');
+            navigate('/face-id-login');
             return;
         }
     }, [isAuthenticated, navigate]);
@@ -129,7 +129,7 @@ const AttendanceHistory: FC = () => {
             console.error('Full error object:', error);
             if (error.response?.status === 401) {
                 message.error('Phiên làm việc đã hết hạn, vui lòng đăng nhập lại');
-                navigate('/login');
+                navigate('/face-id-login');
             } else {
                 message.error('Không thể tải dữ liệu chấm công: ' + (error.response?.data?.message || error.message));
             }
