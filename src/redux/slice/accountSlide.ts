@@ -10,12 +10,20 @@ export const fetchAccount = createAsyncThunk(
     }
 )
 
+interface IUserShift {
+    _id: string;
+    name: string;
+    startTime: string;
+    endTime: string;
+}
+
 interface IState {
     isAuthenticated: boolean;
     isLoading: boolean;
     isRefreshToken: boolean;
     errorRefreshToken: string;
     user: {
+        company: any;
         _id: string;
         email: string;
         name: string;
@@ -29,7 +37,8 @@ interface IState {
             apiPath: string;
             method: string;
             module: string;
-        }[]
+        }[];
+        userShiftId?: IUserShift;
     };
     activeMenu: string;
 }
@@ -48,11 +57,12 @@ const initialState: IState = {
             name: "",
         },
         permissions: [],
+        company: undefined,
+        userShiftId: undefined
     },
 
     activeMenu: 'home'
 };
-
 
 export const accountSlide = createSlice({
     name: 'account',
@@ -71,14 +81,17 @@ export const accountSlide = createSlice({
             state.user.name = action.payload.name;
             state.user.role = action?.payload?.role;
             state.user.permissions = action?.payload?.permissions;
+            state.user.userShiftId = action?.payload?.userShiftId;
         },
         setLogoutAction: (state, action) => {
             localStorage.removeItem('access_token');
             state.isAuthenticated = false;
             state.user = {
                 _id: "",
-                email: "",
+                email: "", 
                 name: "",
+                company: undefined,
+                userShiftId: undefined,
                 role: {
                     _id: "",
                     name: "",
@@ -110,6 +123,7 @@ export const accountSlide = createSlice({
                 state.user.name = action.payload.user?.name;
                 state.user.role = action?.payload?.user?.role;
                 state.user.permissions = action?.payload?.user?.permissions;
+                state.user.userShiftId = action?.payload?.user?.userShiftId;
             }
         })
 

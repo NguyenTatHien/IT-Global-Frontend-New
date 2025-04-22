@@ -4,14 +4,14 @@ import {
     ExceptionOutlined,
     ApiOutlined,
     UserOutlined,
-    BankOutlined,
     MenuFoldOutlined,
     MenuUnfoldOutlined,
-    AliwangwangOutlined,
     LogoutOutlined,
-    HeartTwoTone,
     BugOutlined,
-    ScheduleOutlined,
+    ClockCircleOutlined,
+    HistoryOutlined,
+    TeamOutlined,
+    CalendarOutlined,
 } from '@ant-design/icons';
 import { Layout, Menu, Dropdown, Space, message, Avatar, Button } from 'antd';
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -40,24 +40,9 @@ const LayoutAdmin = () => {
 
     useEffect(() => {
         if (permissions?.length) {
-            const viewCompany = permissions.find(item =>
-                item.apiPath === ALL_PERMISSIONS.COMPANIES.GET_PAGINATE.apiPath
-                && item.method === ALL_PERMISSIONS.COMPANIES.GET_PAGINATE.method
-            )
-
             const viewUser = permissions.find(item =>
                 item.apiPath === ALL_PERMISSIONS.USERS.GET_PAGINATE.apiPath
                 && item.method === ALL_PERMISSIONS.USERS.GET_PAGINATE.method
-            )
-
-            const viewJob = permissions.find(item =>
-                item.apiPath === ALL_PERMISSIONS.JOBS.GET_PAGINATE.apiPath
-                && item.method === ALL_PERMISSIONS.JOBS.GET_PAGINATE.method
-            )
-
-            const viewResume = permissions.find(item =>
-                item.apiPath === ALL_PERMISSIONS.RESUMES.GET_PAGINATE.apiPath
-                && item.method === ALL_PERMISSIONS.RESUMES.GET_PAGINATE.method
             )
 
             const viewRole = permissions.find(item =>
@@ -70,47 +55,62 @@ const LayoutAdmin = () => {
                 && item.method === ALL_PERMISSIONS.USERS.GET_PAGINATE.method
             )
 
+            const viewShifts = permissions.find(item =>
+                item.apiPath === ALL_PERMISSIONS.SHIFTS.GET_PAGINATE.apiPath
+                && item.method === ALL_PERMISSIONS.SHIFTS.GET_PAGINATE.method
+            )
+
+            const viewUserShifts = permissions.find(item =>
+                item.apiPath === ALL_PERMISSIONS.USER_SHIFTS.GET_PAGINATE.apiPath
+                && item.method === ALL_PERMISSIONS.USER_SHIFTS.GET_PAGINATE.method
+            )
+
             const full = [
                 {
-                    label: <Link to='/admin'>Dashboard</Link>,
+                    label: <Link to='/admin'>Bảng điều khiển</Link>,
                     key: '/admin',
                     icon: <AppstoreOutlined />
                 },
-                ...(viewCompany ? [{
-                    label: <Link to='/admin/company'>Company</Link>,
-                    key: '/admin/company',
-                    icon: <BankOutlined />,
-                }] : []),
-
                 ...(viewUser ? [{
-                    label: <Link to='/admin/user'>User</Link>,
+                    label: <Link to='/admin/user'>Người dùng</Link>,
                     key: '/admin/user',
                     icon: <UserOutlined />
                 }] : []),
-                ...(viewJob ? [{
-                    label: <Link to='/admin/job'>Job</Link>,
-                    key: '/admin/job',
-                    icon: <ScheduleOutlined />
-                }] : []),
-
-                ...(viewResume ? [{
-                    label: <Link to='/admin/resume'>Resume</Link>,
-                    key: '/admin/resume',
-                    icon: <AliwangwangOutlined />
-                }] : []),
                 ...(viewPermission ? [{
-                    label: <Link to='/admin/permission'>Permission</Link>,
+                    label: <Link to='/admin/permission'>Quyền</Link>,
                     key: '/admin/permission',
                     icon: <ApiOutlined />
                 }] : []),
                 ...(viewRole ? [{
-                    label: <Link to='/admin/role'>Role</Link>,
+                    label: <Link to='/admin/role'>Vai trò</Link>,
                     key: '/admin/role',
                     icon: <ExceptionOutlined />
                 }] : []),
-
-
-
+                {
+                    label: <Link to='/admin/check-in-out'>Chấm công</Link>,
+                    key: '/admin/check-in-out',
+                    icon: <ClockCircleOutlined />
+                },
+                {
+                    label: <Link to='/admin/attendance-history'>Lịch sử chấm công</Link>,
+                    key: '/admin/attendance-history',
+                    icon: <HistoryOutlined />
+                },
+                ...(viewShifts ? [{
+                    label: <Link to='/admin/shifts'>Quản lý ca làm việc</Link>,
+                    key: '/admin/shifts',
+                    icon: <ClockCircleOutlined />
+                }] : []),
+                ...(viewUserShifts ? [{
+                    label: <Link to='/admin/user-shifts'>Phân ca nhân viên</Link>,
+                    key: '/admin/user-shifts',
+                    icon: <TeamOutlined />
+                }] : []),
+                {
+                    label: <Link to='/admin/my-shifts'>Ca làm việc của tôi</Link>,
+                    key: '/admin/my-shifts',
+                    icon: <CalendarOutlined />
+                },
             ];
 
             setMenuItems(full);
@@ -128,17 +128,6 @@ const LayoutAdmin = () => {
             navigate('/')
         }
     }
-
-    // if (isMobile) {
-    //     items.push({
-    //         label: <label
-    //             style={{ cursor: 'pointer' }}
-    //             onClick={() => handleLogout()}
-    //         >Đăng xuất</label>,
-    //         key: 'logout',
-    //         icon: <LogoutOutlined />
-    //     })
-    // }
 
     const itemsDropdown = [
         {
@@ -203,7 +192,6 @@ const LayoutAdmin = () => {
                                 <Space style={{ cursor: "pointer" }}>
                                     Welcome {user?.name}
                                     <Avatar> {user?.name?.substring(0, 2)?.toUpperCase()} </Avatar>
-
                                 </Space>
                             </Dropdown>
                         </div>
@@ -211,12 +199,8 @@ const LayoutAdmin = () => {
                     <Content style={{ padding: '15px' }}>
                         <Outlet />
                     </Content>
-                    {/* <Footer style={{ padding: 10, textAlign: 'center' }}>
-                        React Typescript series Nest.JS &copy; Hỏi Dân IT - Made with <HeartTwoTone />
-                    </Footer> */}
                 </Layout>
             </Layout>
-
         </>
     );
 };

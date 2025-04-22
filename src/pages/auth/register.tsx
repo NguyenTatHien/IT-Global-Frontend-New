@@ -18,7 +18,7 @@ const RegisterPage = () => {
         setIsSubmit(false);
         if (res?.data?._id) {
             message.success('Đăng ký tài khoản thành công!');
-            navigate('/login')
+            navigate('/face-id-login')
         } else {
             notification.error({
                 message: "Có lỗi xảy ra",
@@ -121,7 +121,7 @@ const RegisterPage = () => {
                             <Divider> Or </Divider>
                             <p className="text text-normal" > Đã có tài khoản ?
                                 <span>
-                                    <Link to='/login' > Đăng Nhập </Link>
+                                    <Link to='/face-id-login' > Đăng Nhập </Link>
                                 </span>
                             </p>
                         </Form>

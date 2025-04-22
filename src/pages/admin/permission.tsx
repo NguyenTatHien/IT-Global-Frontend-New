@@ -1,8 +1,7 @@
-import DataTable from "@/components/client/data-table";
+import { ActionType, ProColumns, ProTable } from '@ant-design/pro-components';
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { IPermission } from "@/types/backend";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { ActionType, ProColumns } from '@ant-design/pro-components';
 import { Button, Popconfirm, Space, message, notification } from "antd";
 import { useState, useRef } from 'react';
 import dayjs from 'dayjs';
@@ -13,7 +12,7 @@ import ViewDetailPermission from "@/components/admin/permission/view.permission"
 import ModalPermission from "@/components/admin/permission/modal.permission";
 import { colorMethod } from "@/config/utils";
 import Access from "@/components/share/access";
-import { ALL_PERMISSIONS } from "@/config/permissions";
+import { ALL_PERMISSIONS, ALL_MODULES } from "@/config/permissions";
 
 const PermissionPage = () => {
     const [openModal, setOpenModal] = useState<boolean>(false);
@@ -48,7 +47,7 @@ const PermissionPage = () => {
 
     const columns: ProColumns<IPermission>[] = [
         {
-            title: 'Id',
+            title: 'Mã quyền',
             dataIndex: '_id',
             width: 250,
             render: (text, record, index, action) => {
@@ -64,19 +63,32 @@ const PermissionPage = () => {
             hideInSearch: true,
         },
         {
-            title: 'Name',
+            title: 'Tên quyền',
             dataIndex: 'name',
             sorter: true,
+            fieldProps: {
+                placeholder: 'Nhập tên quyền'
+            }
         },
         {
-            title: 'API',
+            title: 'Đường dẫn API',
             dataIndex: 'apiPath',
             sorter: true,
+            fieldProps: {
+                placeholder: 'Nhập đường dẫn API'
+            }
         },
         {
-            title: 'Method',
+            title: 'Phương thức',
             dataIndex: 'method',
             sorter: true,
+            valueEnum: {
+                GET: 'GET',
+                POST: 'POST',
+                PUT: 'PUT',
+                PATCH: 'PATCH',
+                DELETE: 'DELETE',
+            },
             render(dom, entity, index, action, schema) {
                 return (
                     <p style={{ paddingLeft: 10, fontWeight: 'bold', marginBottom: 0, color: colorMethod(entity?.method as string) }}>{entity?.method || ''}</p>
@@ -87,9 +99,10 @@ const PermissionPage = () => {
             title: 'Module',
             dataIndex: 'module',
             sorter: true,
+            valueEnum: ALL_MODULES
         },
         {
-            title: 'CreatedAt',
+            title: 'Ngày tạo',
             dataIndex: 'createdAt',
             width: 200,
             sorter: true,
@@ -101,7 +114,7 @@ const PermissionPage = () => {
             hideInSearch: true,
         },
         {
-            title: 'UpdatedAt',
+            title: 'Ngày cập nhật',
             dataIndex: 'updatedAt',
             width: 200,
             sorter: true,
@@ -113,8 +126,7 @@ const PermissionPage = () => {
             hideInSearch: true,
         },
         {
-
-            title: 'Actions',
+            title: 'Thao tác',
             hideInSearch: true,
             width: 50,
             render: (_value, entity, _index, _action) => (
@@ -159,7 +171,6 @@ const PermissionPage = () => {
                     </Access>
                 </Space>
             ),
-
         },
     ];
 
@@ -167,9 +178,8 @@ const PermissionPage = () => {
         const clone = { ...params };
         if (clone.name) clone.name = `/${clone.name}/i`;
         if (clone.apiPath) clone.apiPath = `/${clone.apiPath}/i`;
-        if (clone.method) clone.method = `/${clone.method}/i`;
-        if (clone.module) clone.module = `/${clone.module}/i`;
-
+        if (clone.method) clone.method = clone.method;
+        if (clone.module) clone.module = clone.module;
 
         let temp = queryString.stringify(clone);
 
@@ -208,13 +218,26 @@ const PermissionPage = () => {
             <Access
                 permission={ALL_PERMISSIONS.PERMISSIONS.GET_PAGINATE}
             >
-                <DataTable<IPermission>
+                <ProTable<IPermission>
                     actionRef={tableRef}
                     headerTitle="Danh sách Permissions (Quyền Hạn)"
                     rowKey="_id"
                     loading={isFetching}
                     columns={columns}
                     dataSource={permissions}
+                    search={{
+                        labelWidth: 'auto',
+                        defaultCollapsed: true,
+                        layout: 'vertical',
+                        span: {
+                            xs: 24,
+                            sm: 12,
+                            md: 8,
+                            lg: 6,
+                            xl: 6,
+                            xxl: 6
+                        },
+                    }}
                     request={async (params, sort, filter): Promise<any> => {
                         const query = buildQuery(params, sort, filter);
                         dispatch(fetchPermission({ query }))
@@ -226,11 +249,11 @@ const PermissionPage = () => {
                             pageSize: meta.pageSize,
                             showSizeChanger: true,
                             total: meta.total,
-                            showTotal: (total, range) => { return (<div> {range[0]}-{range[1]} trên {total} rows</div>) }
+                            showTotal: (total: number, range: number[]) => { return (<div> {range[0]}-{range[1]} trên {total} rows</div>) }
                         }
                     }
                     rowSelection={false}
-                    toolBarRender={(_action, _rows): any => {
+                    toolBarRender={(_action: any, _rows: any): any => {
                         return (
                             <Button
                                 icon={<PlusOutlined />}

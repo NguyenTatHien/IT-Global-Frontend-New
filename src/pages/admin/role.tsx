@@ -1,4 +1,4 @@
-import DataTable from "@/components/client/data-table";
+import DataTable from "@/components/share/data-table";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { IRole } from "@/types/backend";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
@@ -44,7 +44,7 @@ const RolePage = () => {
 
     const columns: ProColumns<IRole>[] = [
         {
-            title: 'Id',
+            title: 'Mã vai trò',
             dataIndex: '_id',
             width: 250,
             render: (text, record, index, action) => {
@@ -57,7 +57,7 @@ const RolePage = () => {
             hideInSearch: true,
         },
         {
-            title: 'Name',
+            title: 'Tên vai trò',
             dataIndex: 'name',
             sorter: true,
         },
@@ -67,14 +67,14 @@ const RolePage = () => {
             render(dom, entity, index, action, schema) {
                 return <>
                     <Tag color={entity.isActive ? "lime" : "red"} >
-                        {entity.isActive ? "ACTIVE" : "INACTIVE"}
+                        {entity.isActive ? "Đang hoạt động" : "Ngừng hoạt động"}
                     </Tag>
                 </>
             },
             hideInSearch: true,
         },
         {
-            title: 'CreatedAt',
+            title: 'Ngày tạo',
             dataIndex: 'createdAt',
             width: 200,
             sorter: true,
@@ -86,7 +86,7 @@ const RolePage = () => {
             hideInSearch: true,
         },
         {
-            title: 'UpdatedAt',
+            title: 'Ngày cập nhật',
             dataIndex: 'updatedAt',
             width: 200,
             sorter: true,
@@ -98,8 +98,7 @@ const RolePage = () => {
             hideInSearch: true,
         },
         {
-
-            title: 'Actions',
+            title: 'Thao tác',
             hideInSearch: true,
             width: 50,
             render: (_value, entity, _index, _action) => (
@@ -144,7 +143,6 @@ const RolePage = () => {
                     </Access>
                 </Space>
             ),
-
         },
     ];
 
@@ -198,11 +196,11 @@ const RolePage = () => {
                             pageSize: meta.pageSize,
                             showSizeChanger: true,
                             total: meta.total,
-                            showTotal: (total, range) => { return (<div> {range[0]}-{range[1]} trên {total} rows</div>) }
+                            showTotal: (total: number, range: number[]) => { return (<div> {range[0]}-{range[1]} trên {total} rows</div>) }
                         }
                     }
                     rowSelection={false}
-                    toolBarRender={(_action, _rows): any => {
+                    toolBarRender={(_action: any, _rows: any): any => {
                         return (
                             <Button
                                 icon={<PlusOutlined />}

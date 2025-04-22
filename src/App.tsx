@@ -1,59 +1,29 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import {
   createBrowserRouter,
-  Outlet,
   RouterProvider,
-  useLocation,
 } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import NotFound from 'components/share/not.found';
-import Loading from 'components/share/loading';
 import LoginPage from 'pages/auth/login';
 import RegisterPage from 'pages/auth/register';
 import LayoutAdmin from 'components/admin/layout.admin';
 import ProtectedRoute from 'components/share/protected-route.ts';
-import Header from 'components/client/header.client';
-import Footer from 'components/client/footer.client';
-import HomePage from 'pages/home';
-import styles from 'styles/app.module.scss';
 import DashboardPage from './pages/admin/dashboard';
-import CompanyPage from './pages/admin/company';
 import PermissionPage from './pages/admin/permission';
-import ResumePage from './pages/admin/resume';
 import RolePage from './pages/admin/role';
 import UserPage from './pages/admin/user';
 import { fetchAccount } from './redux/slice/accountSlide';
 import LayoutApp from './components/share/layout.app';
-import JobPage from './pages/admin/job';
-import ViewUpsertJob from './components/admin/job/upsert.job';
-import ClientJobPage from './pages/job';
-import ClientJobDetailPage from './pages/job/detail';
-import ClientCompanyPage from './pages/company';
-import ClientCompanyDetailPage from './pages/company/detail';
 import FaceIdLogin from './pages/auth/faceIdLogin';
-
-const LayoutClient = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const location = useLocation();
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (rootRef && rootRef.current) {
-      rootRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-
-  }, [location]);
-
-  return (
-    <div className='layout-app' ref={rootRef}>
-      <Header searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-      <div className={styles['content-app']}>
-        <Outlet context={[searchTerm, setSearchTerm]} />
-      </div>
-      <Footer />
-    </div>
-  )
-}
+import FaceIdRegister from './pages/auth/faceIdRegister';
+import CheckInOut from './components/admin/attendance/CheckInOut';
+import AttendanceHistory from './components/admin/attendance/AttendanceHistory';
+import Shifts from './components/admin/shifts/Shifts';
+import UserShifts from './components/admin/user-shifts/UserShifts';
+import { ConfigProvider } from 'antd';
+import vi from 'antd/locale/vi_VN';
+import MyShifts from './components/admin/user-shifts/MyShifts';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -63,7 +33,9 @@ export default function App() {
   useEffect(() => {
     if (
       window.location.pathname === '/login'
-      || window.location.pathname === '/register'
+      || window.location.pathname === '/register' ||
+      window.location.pathname === '/face-id-login' ||
+      window.location.pathname === '/face-id-register'
     )
       return;
     dispatch(fetchAccount())
@@ -95,39 +67,10 @@ export default function App() {
             </ProtectedRoute>
         },
         {
-          path: "company",
-          element:
-            <ProtectedRoute>
-              <CompanyPage />
-            </ProtectedRoute>
-        },
-        {
           path: "user",
           element:
             <ProtectedRoute>
               <UserPage />
-            </ProtectedRoute>
-        },
-
-        {
-          path: "job",
-          children: [
-            {
-              index: true,
-              element: <ProtectedRoute> <JobPage /></ProtectedRoute>
-            },
-            {
-              path: "upsert", element:
-                <ProtectedRoute><ViewUpsertJob /></ProtectedRoute>
-            }
-          ]
-        },
-
-        {
-          path: "resume",
-          element:
-            <ProtectedRoute>
-              <ResumePage />
             </ProtectedRoute>
         },
         {
@@ -142,6 +85,41 @@ export default function App() {
           element:
             <ProtectedRoute>
               <RolePage />
+            </ProtectedRoute>
+        },
+        {
+          path: "check-in-out",
+          element:
+            <ProtectedRoute>
+              <CheckInOut />
+            </ProtectedRoute>
+        },
+        {
+          path: "attendance-history",
+          element:
+            <ProtectedRoute>
+              <AttendanceHistory />
+            </ProtectedRoute>
+        },
+        {
+          path: "shifts",
+          element:
+            <ProtectedRoute>
+              <Shifts />
+            </ProtectedRoute>
+        },
+        {
+          path: "user-shifts",
+          element:
+            <ProtectedRoute>
+              <UserShifts />
+            </ProtectedRoute>
+        },
+        {
+          path: "my-shifts",
+          element:
+            <ProtectedRoute>
+              <MyShifts />
             </ProtectedRoute>
         }
       ],
@@ -162,14 +140,18 @@ export default function App() {
       element: <FaceIdLogin />,
     },
     {
+      path: "/face-id-register",
+      element: <FaceIdRegister />,
+    },
+    {
       path: "*",
       element: <NotFound />,
     }
   ]);
 
   return (
-    <>
+    <ConfigProvider locale={vi}>
       <RouterProvider router={router} />
-    </>
+    </ConfigProvider>
   )
 }

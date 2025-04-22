@@ -1,4 +1,4 @@
-import DataTable from "@/components/client/data-table";
+import DataTable from "@/components/share/data-table";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { fetchUser } from "@/redux/slice/userSlide";
 import { IUser } from "@/types/backend";
@@ -13,6 +13,8 @@ import ModalUser from "@/components/admin/user/modal.user";
 import ViewDetailUser from "@/components/admin/user/view.user";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
+import 'dayjs/locale/vi';
+dayjs.locale('vi');
 
 const UserPage = () => {
     const [openModal, setOpenModal] = useState<boolean>(false);
@@ -47,7 +49,7 @@ const UserPage = () => {
 
     const columns: ProColumns<IUser>[] = [
         {
-            title: 'Id',
+            title: 'Mã người dùng', // Changed from 'Id'
             dataIndex: '_id',
             width: 250,
             render: (text, record, index, action) => {
@@ -63,18 +65,34 @@ const UserPage = () => {
             hideInSearch: true,
         },
         {
-            title: 'Name',
+            title: 'Tên', // Changed from 'Name'
             dataIndex: 'name',
             sorter: true,
         },
         {
-            title: 'Email',
+            title: 'Email', // No change
             dataIndex: 'email',
             sorter: true,
         },
+        {
+            title: 'Ảnh khuôn mặt', // Changed from 'FaceId'
+            dataIndex: 'image',
+            render: (text, record) => {
+                return record.image ? (
+                    <img
+                        src={`${import.meta.env.VITE_BACKEND_URL}/images/user/${record.image}`}
+                        alt="User Image"
+                        style={{ width: "100px", height: "auto", objectFit: "cover", borderRadius: "8px" }}
+                    />
+                ) : (
+                    <span>Không có ảnh</span>
+                );
+            },
+            hideInSearch: true,
+        },
 
         {
-            title: 'CreatedAt',
+            title: 'Ngày tạo', // Changed from 'CreatedAt'
             dataIndex: 'createdAt',
             width: 200,
             sorter: true,
@@ -86,7 +104,7 @@ const UserPage = () => {
             hideInSearch: true,
         },
         {
-            title: 'UpdatedAt',
+            title: 'Ngày cập nhật', // Changed from 'UpdatedAt'
             dataIndex: 'updatedAt',
             width: 200,
             sorter: true,
@@ -99,7 +117,7 @@ const UserPage = () => {
         },
         {
 
-            title: 'Actions',
+            title: 'Hành động', // Changed from 'Actions'
             hideInSearch: true,
             width: 50,
             render: (_value, entity, _index, _action) => (
@@ -204,11 +222,11 @@ const UserPage = () => {
                             pageSize: meta.pageSize,
                             showSizeChanger: true,
                             total: meta.total,
-                            showTotal: (total, range) => { return (<div> {range[0]}-{range[1]} trên {total} rows</div>) }
+                            showTotal: (total: number, range: number[]) => { return (<div> {range[0]}-{range[1]} trên {total} rows</div>) }
                         }
                     }
                     rowSelection={false}
-                    toolBarRender={(_action, _rows): any => {
+                    toolBarRender={(_action: any, _rows: any): any => {
                         return (
                             <Button
                                 icon={<PlusOutlined />}

@@ -21,17 +21,20 @@ export interface IAccount {
         _id: string;
         email: string;
         name: string;
+        company: string;
         role: {
             _id: string;
             name: string;
         }
+        faceDescriptor: number[];
         permissions: {
             _id: string;
             name: string;
             apiPath: string;
             method: string;
             module: string;
-        }[]
+        }[];
+        userShiftId?: IUserShift;
     }
 }
 
@@ -50,82 +53,41 @@ export interface ICompany {
     updatedAt?: string;
 }
 
-
+export interface IUserShift {
+    _id: string;
+    name: string;
+    startTime: string;
+    endTime: string;
+}
 
 export interface IUser {
     _id?: string;
-    name: string;
     email: string;
-    password?: string;
+    name: string;
+    password: string;
     age: number;
     gender: string;
     address: string;
-    role?: {
-        _id: string;
-        name: string;
-    }
-
-    company?: {
-        _id: string;
-        name: string;
-    }
-    createdBy?: string;
-    isDeleted?: boolean;
-    deletedAt?: boolean | null;
-    createdAt?: string;
-    updatedAt?: string;
-}
-
-export interface IJob {
-    _id?: string;
-    name: string;
-    skills: string[];
-    company?: {
-        _id: string;
-        name: string;
-        logo?: string;
-    }
-    location: string;
-    salary: number;
-    quantity: number;
-    level: string;
-    description: string;
-    startDate: Date;
-    endDate: Date;
-    isActive: boolean;
-
-    createdBy?: string;
-    isDeleted?: boolean;
-    deletedAt?: boolean | null;
-    createdAt?: string;
-    updatedAt?: string;
-}
-
-export interface IResume {
-    _id?: string;
-    email: string;
-    userId: string;
-    url: string;
-    status: string;
-    companyId: string | {
-        _id: string;
-        name: string;
-        logo: string;
-    };
-    jobId: string | {
+    role: {
         _id: string;
         name: string;
     };
-    history?: {
-        status: string;
-        updatedAt: Date;
-        updatedBy: { _id: string; email: string }
-    }[]
-    createdBy?: string;
-    isDeleted?: boolean;
-    deletedAt?: boolean | null;
+    permissions: {
+        _id: string;
+        name: string;
+        apiPath: string;
+        method: string;
+        module: string;
+    }[];
+    userShiftId?: IUserShift;
+    faceDescriptor?: number[];
+    employeeType: 'official' | 'contract' | 'intern';
+    age?: number;
+    gender?: string;
+    address?: string;
     createdAt?: string;
     updatedAt?: string;
+    image?: string;
 }
 
 export interface IPermission {
@@ -168,3 +130,36 @@ export interface ISubscribers {
     createdAt?: string;
     updatedAt?: string;
 }
+
+export interface IAttendanceData {
+    data: {
+        meta: {
+            current: number;
+            pageSize: number;
+            total: number;
+        };
+        result: Array<{
+            _id: string;
+            userId: string;
+            checkInTime: string;
+            checkOutTime?: string;
+            status: 'on-time' | 'late' | 'early' | 'absent';
+            totalHours: string;
+            overtimeHours: number;
+            lateMinutes: number;
+            earlyMinutes: number;
+            userShiftId: {
+                _id: string;
+                name: string;
+                startTime: string;
+                endTime: string;
+                shiftId?: {
+                    _id: string;
+                    name: string;
+                    startTime: string;
+                    endTime: string;
+                }
+            } | null;
+        }>;
+    };
+} 

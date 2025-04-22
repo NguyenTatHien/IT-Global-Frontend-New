@@ -1,8 +1,9 @@
 import { IBackendRes } from "@/types/backend";
 import { Mutex } from "async-mutex";
-import axiosClient from "axios";
+import axios from "axios";
 import { store } from "@/redux/store";
 import { setRefreshTokenAction } from "@/redux/slice/accountSlide";
+
 interface AccessTokenResponse {
     access_token: string;
 }
@@ -11,8 +12,9 @@ interface AccessTokenResponse {
  * Creates an initial 'axios' instance with custom settings.
  */
 
-const instance = axiosClient.create({
-    baseURL: import.meta.env.VITE_BACKEND_URL as string,
+const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+const instance = axios.create({
+    baseURL: baseUrl,
     withCredentials: true
 });
 
@@ -27,15 +29,19 @@ const handleRefreshToken = async (): Promise<string | null> => {
     });
 };
 
+// Add a request interceptor
 instance.interceptors.request.use(function (config) {
-    if (typeof window !== "undefined" && window && window.localStorage && window.localStorage.getItem('access_token')) {
-        config.headers.Authorization = 'Bearer ' + window.localStorage.getItem('access_token');
+    // Get token from localStorage
+    const access_token = localStorage.getItem('access_token');
+    
+    // If token exists, add it to the headers
+    if (access_token) {
+        config.headers.Authorization = `Bearer ${access_token}`;
     }
-    if (!config.headers.Accept && config.headers["Content-Type"]) {
-        config.headers.Accept = "application/json";
-        config.headers["Content-Type"] = "application/json; charset=utf-8";
-    }
+    
     return config;
+}, function (error) {
+    return Promise.reject(error);
 });
 
 /**
@@ -45,32 +51,38 @@ instance.interceptors.request.use(function (config) {
 instance.interceptors.response.use(
     (res) => res.data,
     async (error) => {
-        if (error.config && error.response
-            && +error.response.status === 401
-            && error.config.url !== '/api/v1/auth/login'
-            && !error.config.headers[NO_RETRY_HEADER]
-        ) {
-            const access_token = await handleRefreshToken();
-            error.config.headers[NO_RETRY_HEADER] = 'true'
-            if (access_token) {
-                error.config.headers['Authorization'] = `Bearer ${access_token}`;
-                localStorage.setItem('access_token', access_token)
-                return instance.request(error.config);
+        // Handle 401 Unauthorized error
+        if (error.response && error.response.status === 401) {
+            if (error.config.url !== '/api/v1/auth/login' && !error.config.headers[NO_RETRY_HEADER]) {
+                const access_token = await handleRefreshToken();
+                error.config.headers[NO_RETRY_HEADER] = 'true'
+                if (access_token) {
+                    error.config.headers['Authorization'] = `Bearer ${access_token}`;
+                    localStorage.setItem('access_token', access_token)
+                    return instance.request(error.config);
+                }
             }
+            localStorage.removeItem('access_token');
+            window.location.href = '/face-id-login';
+            return Promise.reject(error);
         }
 
-        if (
-            error.config && error.response
-            && +error.response.status === 400
+        // Handle refresh token error
+        if (error.config && error.response?.status === 400 
             && error.config.url === '/api/v1/auth/refresh'
             && location.pathname.startsWith("/admin")
         ) {
             const message = error?.response?.data?.message ?? "Có lỗi xảy ra, vui lòng login.";
-            //dispatch redux action
             store.dispatch(setRefreshTokenAction({ status: true, message }));
         }
 
-        return error?.response?.data ?? Promise.reject(error);
+        // Return error response data if available
+        if (error.response?.data) {
+            return Promise.reject(error.response.data);
+        }
+
+        // Otherwise reject with the error
+        return Promise.reject(error);
     }
 );
 
