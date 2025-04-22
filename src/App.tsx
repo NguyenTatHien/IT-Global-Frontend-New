@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import {
   createBrowserRouter,
+  Navigate,
   RouterProvider,
 } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
@@ -32,10 +33,10 @@ export default function App() {
 
   useEffect(() => {
     if (
-      window.location.pathname === '/login'
-      || window.location.pathname === '/register' ||
-      window.location.pathname === '/face-id-login' ||
-      window.location.pathname === '/face-id-register'
+      window.location.pathname === '/login' || 
+      // window.location.pathname === '/register' ||
+      window.location.pathname === '/face-id-login'
+      // window.location.pathname === '/face-id-register'
     )
       return;
     dispatch(fetchAccount())
@@ -54,6 +55,10 @@ export default function App() {
     //     { path: "company/:id", element: <ClientCompanyDetailPage /> }
     //   ],
     // },
+    {
+      path: "/",
+      element: <Navigate to="/admin" replace/>,
+    },
 
     {
       path: "/admin",
@@ -131,18 +136,18 @@ export default function App() {
       element: <LoginPage />,
     },
 
-    {
-      path: "/register",
-      element: <RegisterPage />,
-    },
+    // {
+    //   path: "/register",
+    //   element: <RegisterPage />,
+    // },
     {
       path: "/face-id-login",
       element: <FaceIdLogin />,
     },
-    {
-      path: "/face-id-register",
-      element: <FaceIdRegister />,
-    },
+    // {
+    //   path: "/face-id-register",
+    //   element: <FaceIdRegister />,
+    // },
     {
       path: "*",
       element: <NotFound />,
