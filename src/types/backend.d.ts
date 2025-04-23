@@ -22,6 +22,11 @@ export interface IAccount {
         email: string;
         name: string;
         company: string;
+        image?: string;
+        age?: number;
+        gender?: 'MALE' | 'FEMALE' | 'OTHER';
+        address?: string;
+        employeeType?: 'OFFICIAL' | 'PROBATION';
         role: {
             _id: string;
             name: string;

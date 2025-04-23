@@ -6,9 +6,10 @@ import { callCreateUser, callFetchRole, callScanFace, callUpdateUser, callUpload
 import { IUser } from "@/types/backend";
 import { DebounceSelect } from "./debouce.select";
 import Webcam from "react-webcam";
-import { CameraOutlined, CheckSquareOutlined, LoadingOutlined, PlusOutlined, RetweetOutlined } from "@ant-design/icons";
+import { CameraOutlined, SaveOutlined, CloseOutlined, PlusOutlined, RetweetOutlined, UserAddOutlined } from "@ant-design/icons";
 import { v4 as uuidv4 } from "uuid";
 import enUS from 'antd/lib/locale/en_US';
+import AddressForm, { IAddress } from '@/components/AddressForm';
 
 // Constants for image capture
 const CAPTURE_WIDTH = 640;
@@ -184,8 +185,16 @@ const ModalUser = (props: IProps) => {
             return;
         }
 
-        const { name, email, password, address, age, gender, role, employeeType } = valuesForm;
+        const { name, email, password, age, gender, role, employeeType, city, district, ward, detail } = valuesForm;
         const file = dataFaceImage[0]?.originFileObj;
+
+        // Tạo object address từ các trường địa chỉ
+        const address: IAddress = {
+            city: city?.toString() || "",
+            district: district?.toString() || "",
+            ward: ward?.toString() || "",
+            detail: detail || ""
+        };
 
         const user: IUser = {
             name,
@@ -193,7 +202,7 @@ const ModalUser = (props: IProps) => {
             password,
             age,
             gender,
-            address,
+            address: JSON.stringify(address).replace(/\\"/g, '"'),
             role: role?.value || dataInit?.role?._id,
             employeeType,
             permissions: [],
@@ -295,16 +304,70 @@ const ModalUser = (props: IProps) => {
                 preserve={false}
                 form={form}
                 onFinish={submitUser}
-                initialValues={dataInit?._id ? dataInit : {}}
+                initialValues={{
+                    ...dataInit,
+                    ...(dataInit?.address ? (() => {
+                        try {
+                            // Try to parse as JSON first
+                            try {
+                                const parsedAddress = JSON.parse(dataInit.address.replace(/\\"/g, '"'));
+                                return {
+                                    city: parsedAddress.city || '',
+                                    district: parsedAddress.district || '',
+                                    ward: parsedAddress.ward || '',
+                                    detail: parsedAddress.detail || ''
+                                };
+                            } catch {
+                                // If not JSON, try to parse from string format
+                                const address = dataInit.address;
+                                const parts = address.split(',').map(part => part.trim());
+                                
+                                // Assuming format: detail, ward, district, city
+                                return {
+                                    detail: parts[0] || '', // "216/174, đường số 5"
+                                    ward: (parts[1] || '').replace('phường ', ''), // "Bình Hưng Hòa"
+                                    district: (parts[2] || '').replace('quận ', ''), // "Bình Tân"
+                                    city: parts[3] || 'Hồ Chí Minh' // Default to HCM if not specified
+                                };
+                            }
+                        } catch (error) {
+                            console.error('Error parsing address:', error);
+                            return {
+                                city: '',
+                                district: '',
+                                ward: '',
+                                detail: dataInit.address || ''
+                            };
+                        }
+                    })() : {
+                        city: '',
+                        district: '',
+                        ward: '',
+                        detail: ''
+                    }),
+                    password: undefined,
+                    employeeType: dataInit?.employeeType || "official"
+                }}
                 submitter={{
-                    render: (_: any, dom: any) => <FooterToolbar>{dom}</FooterToolbar>,
-                    submitButtonProps: {
-                        icon: <CheckSquareOutlined />,
-                        loading: loading
-                    },
-                    searchConfig: {
-                        resetText: "Hủy",
-                        submitText: <>{dataInit?._id ? "Cập nhật" : "Tạo mới"}</>,
+                    render: (props: any, dom: any) => {
+                        return [
+                            <Button
+                                key="cancel"
+                                onClick={() => handleReset()}
+                                icon={<CloseOutlined />}
+                            >
+                                Hủy
+                            </Button>,
+                            <Button
+                                key="submit"
+                                type="primary"
+                                loading={loading}
+                                onClick={() => props.submit()}
+                                icon={dataInit?._id ? <SaveOutlined /> : <UserAddOutlined />}
+                            >
+                                {dataInit?._id ? "Cập nhật" : "Tạo mới"}
+                            </Button>
+                        ];
                     }
                 }}
             >
@@ -390,17 +453,14 @@ const ModalUser = (props: IProps) => {
                             }}
                             placeholder="Chọn loại nhân viên"
                             rules={[{ required: true, message: "Vui lòng chọn loại nhân viên!" }]}
-                            initialValue="official"
                         />
                     </Col>
-                    <Col lg={12} md={12} sm={24} xs={24}>
-                        <ProFormText
-                            label="Địa chỉ"
-                            name="address"
-                            rules={[{ required: true, message: "Vui lòng không bỏ trống" }]}
-                            placeholder="Nhập địa chỉ"
-                        />
-                    </Col>
+
+                    <AddressForm 
+                        form={form} 
+                        initialAddress={dataInit?.address}
+                    />
+
                     <Col lg={12} md={12} sm={24} xs={24}>
                         <Form.Item 
                             label="Ảnh Face ID"

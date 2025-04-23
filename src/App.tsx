@@ -11,6 +11,7 @@ import RegisterPage from 'pages/auth/register';
 import LayoutAdmin from 'components/admin/layout.admin';
 import ProtectedRoute from 'components/share/protected-route.ts';
 import DashboardPage from './pages/admin/dashboard';
+import HomePage from './pages/admin/home';
 import PermissionPage from './pages/admin/permission';
 import RolePage from './pages/admin/role';
 import UserPage from './pages/admin/user';
@@ -25,6 +26,7 @@ import UserShifts from './components/admin/user-shifts/UserShifts';
 import { ConfigProvider } from 'antd';
 import vi from 'antd/locale/vi_VN';
 import MyShifts from './components/admin/user-shifts/MyShifts';
+import Profile from './pages/admin/profile';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -67,6 +69,13 @@ export default function App() {
       children: [
         {
           index: true, element:
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
+        },
+        {
+          path: "dashboard",
+          element:
             <ProtectedRoute>
               <DashboardPage />
             </ProtectedRoute>
@@ -125,6 +134,13 @@ export default function App() {
           element:
             <ProtectedRoute>
               <MyShifts />
+            </ProtectedRoute>
+        },
+        {
+          path: "profile",
+          element:
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
         }
       ],

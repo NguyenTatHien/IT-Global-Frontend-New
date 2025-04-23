@@ -1,9 +1,9 @@
 import { FooterToolbar, ModalForm, ProCard, ProFormSwitch, ProFormText, ProFormTextArea } from "@ant-design/pro-components";
-import { Col, Form, Row, message, notification } from "antd";
+import { Col, Form, Row, Button, message, notification } from "antd";
 import { isMobile } from 'react-device-detect';
 import { callCreateRole, callFetchPermission, callUpdateRole } from "@/config/api";
 import { IPermission } from "@/types/backend";
-import { CheckSquareOutlined } from "@ant-design/icons";
+import { SaveOutlined, CloseOutlined, KeyOutlined } from "@ant-design/icons";
 import ModuleApi from "./module.api";
 import { useState, useEffect } from 'react';
 import _ from 'lodash';
@@ -22,6 +22,7 @@ const ModalRole = (props: IProps) => {
     const { openModal, setOpenModal, reloadTable } = props;
     const singleRole = useAppSelector(state => state.role.singleRole);
     const dispatch = useAppDispatch();
+    const [loading, setLoading] = useState<boolean>(false);
 
     const [form] = Form.useForm();
 
@@ -89,38 +90,48 @@ const ModalRole = (props: IProps) => {
             }
         }
 
-        if (singleRole?._id) {
-            //update
-            const role = {
-                name, description, isActive, permissions: checkedPermissions
-            }
-            const res = await callUpdateRole(role, singleRole._id);
-            if (res.data) {
-                message.success("Cập nhật role thành công");
-                handleReset();
-                reloadTable();
+        try {
+            setLoading(true);
+            if (singleRole?._id) {
+                //update
+                const role = {
+                    name, description, isActive, permissions: checkedPermissions
+                }
+                const res = await callUpdateRole(role, singleRole._id);
+                if (res.data) {
+                    message.success("Cập nhật role thành công");
+                    handleReset();
+                    reloadTable();
+                } else {
+                    notification.error({
+                        message: 'Có lỗi xảy ra',
+                        description: res.message
+                    });
+                }
             } else {
-                notification.error({
-                    message: 'Có lỗi xảy ra',
-                    description: res.message
-                });
+                //create
+                const role = {
+                    name, description, isActive, permissions: checkedPermissions
+                }
+                const res = await callCreateRole(role);
+                if (res.data) {
+                    message.success("Thêm mới role thành công");
+                    handleReset();
+                    reloadTable();
+                } else {
+                    notification.error({
+                        message: 'Có lỗi xảy ra',
+                        description: res.message
+                    });
+                }
             }
-        } else {
-            //create
-            const role = {
-                name, description, isActive, permissions: checkedPermissions
-            }
-            const res = await callCreateRole(role);
-            if (res.data) {
-                message.success("Thêm mới role thành công");
-                handleReset();
-                reloadTable();
-            } else {
-                notification.error({
-                    message: 'Có lỗi xảy ra',
-                    description: res.message
-                });
-            }
+        } catch (error: any) {
+            notification.error({
+                message: 'Có lỗi xảy ra',
+                description: error.message
+            });
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -142,20 +153,31 @@ const ModalRole = (props: IProps) => {
                     width: isMobile ? "100%" : 900,
                     keyboard: false,
                     maskClosable: false,
-
                 }}
                 scrollToFirstError={true}
                 preserve={false}
                 form={form}
                 onFinish={submitRole}
                 submitter={{
-                    render: (_: any, dom: any) => <FooterToolbar>{dom}</FooterToolbar>,
-                    submitButtonProps: {
-                        icon: <CheckSquareOutlined />
-                    },
-                    searchConfig: {
-                        resetText: "Hủy",
-                        submitText: <>{singleRole?._id ? "Cập nhật" : "Tạo mới"}</>,
+                    render: (props: any, dom: any) => {
+                        return [
+                            <Button
+                                key="cancel"
+                                onClick={() => handleReset()}
+                                icon={<CloseOutlined />}
+                            >
+                                Hủy
+                            </Button>,
+                            <Button
+                                key="submit"
+                                type="primary"
+                                loading={loading}
+                                onClick={() => props.submit()}
+                                icon={singleRole?._id ? <SaveOutlined /> : <KeyOutlined />}
+                            >
+                                {singleRole?._id ? "Cập nhật" : "Tạo mới"}
+                            </Button>
+                        ];
                     }
                 }}
             >
