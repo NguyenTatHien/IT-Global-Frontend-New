@@ -126,7 +126,6 @@ const AttendanceHistory: FC = () => {
                 message.error('Không thể tải dữ liệu chấm công: Dữ liệu không hợp lệ');
             }
         } catch (error: any) {
-            console.error('Full error object:', error);
             if (error.response?.status === 401) {
                 message.error('Phiên làm việc đã hết hạn, vui lòng đăng nhập lại');
                 navigate('/face-id-login');

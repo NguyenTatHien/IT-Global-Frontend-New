@@ -1,6 +1,6 @@
 // react-for-nest/src/components/attendance/CheckInOut.tsx
 import React, { useState } from 'react';
-import { Button, Card, message, Space, Typography } from 'antd';
+import { Button, Card, message, Space, Typography, notification } from 'antd';
 import { ClockCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useAppDispatch } from '@/redux/hooks';
 import { fetchAccount } from '@//redux/slice/accountSlide';
@@ -41,8 +41,28 @@ const CheckInOut: React.FC = () => {
       message.success('Check-in thành công!');
       await dispatch(fetchAccount());
     } catch (error: any) {
-      console.error('Check-in error:', error);
-      message.error(error.response?.data?.message || 'Check-in thất bại');
+      message.error(error.message);
+      // let errorMessage = 'Check-in thất bại';
+      // if (error.response?.data?.message) {
+      //   errorMessage = error.response.data.message;
+      // } else if (error.message) {
+      //   errorMessage = error.message;
+      // }
+
+      // notification.error({
+      //   message: 'Không thể check-in',
+      //   description: (
+      //     <div>
+      //       <p>{errorMessage}</p>
+      //       {error.response?.data?.error && (
+      //         <p style={{ color: '#ff4d4f', marginTop: '8px' }}>
+      //           Chi tiết lỗi: {error.response.data.error}
+      //         </p>
+      //       )}
+      //     </div>
+      //   ),
+      //   duration: 5
+      // });
     } finally {
       setLoading(false);
     }
@@ -55,7 +75,28 @@ const CheckInOut: React.FC = () => {
       message.success('Check-out thành công!');
       await dispatch(fetchAccount());
     } catch (error: any) {
-      message.error(error.response?.data?.message || 'Check-out thất bại');
+      message.error(error.message);
+      // let errorMessage = 'Check-out thất bại';
+      // if (error.response?.data?.message) {
+      //   errorMessage = error.response.data.message;
+      // } else if (error.message) {
+      //   errorMessage = error.message;
+      // }
+
+      // notification.error({
+      //   message: 'Không thể check-out',
+      //   description: (
+      //     <div>
+      //       <p>{errorMessage}</p>
+      //       {error.response?.data?.error && (
+      //         <p style={{ color: '#ff4d4f', marginTop: '8px' }}>
+      //           Chi tiết lỗi: {error.response.data.error}
+      //         </p>
+      //       )}
+      //     </div>
+      //   ),
+      //   duration: 5
+      // });
     } finally {
       setLoading(false);
     }

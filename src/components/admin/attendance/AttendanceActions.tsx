@@ -47,7 +47,6 @@ const AttendanceActions: React.FC = () => {
                     setError(null);
                 }
             } catch (error: any) {
-                console.error('Error fetching today attendance:', error);
                 if (error.message === 'Không có ca làm việc hôm nay') {
                     setError('Bạn không có ca làm việc nào trong hôm nay');
                 }
@@ -86,8 +85,6 @@ const AttendanceActions: React.FC = () => {
             message.success('Check-in thành công');
             
         } catch (error: any) {
-            console.error('Check-in error:', error);
-            
             let errorMessage = 'Check-in thất bại';
             if (typeof error === 'string') {
                 errorMessage = error;
