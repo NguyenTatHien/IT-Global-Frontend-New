@@ -1,0 +1,37 @@
+.homeContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 120px);
+    padding: 20px;
+    background: #f0f2f5;
+}
+
+.welcomeCard {
+    width: 100%;
+    max-width: 800px;
+    text-align: center;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.logoContainer {
+    margin-bottom: 24px;
+    
+    .logo {
+        max-width: 200px;
+        height: auto;
+    }
+}
+
+.welcomeText {
+    color: #1890ff;
+    margin-bottom: 16px !important;
+}
+
+.description {
+    font-size: 16px;
+    color: #666;
+    max-width: 600px;
+    margin: 0 auto;
+} 

@@ -349,3 +349,7 @@ export const callGetTodayAttendance = () => {
 export const callGetMyAttendance = (query: string) => {
     return axios.get<IBackendRes<IAttendanceData>>(`/api/v1/attendance/my-attendance?${query}`);
 }
+
+export const callGetProfile = () => {
+    return axios.get<IBackendRes<IUser>>('/api/v1/users/profile/me');
+}

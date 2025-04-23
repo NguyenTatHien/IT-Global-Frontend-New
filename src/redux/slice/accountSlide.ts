@@ -23,14 +23,18 @@ interface IState {
     isRefreshToken: boolean;
     errorRefreshToken: string;
     user: {
-        company: any;
         _id: string;
         email: string;
         name: string;
+        image?: string;
+        age?: number;
+        gender?: 'MALE' | 'FEMALE' | 'OTHER';
+        address?: string;
+        employeeType?: 'OFFICIAL' | 'PROBATION';
         role: {
             _id: string;
             name: string;
-        }
+        };
         permissions: {
             _id: string;
             name: string;
@@ -38,6 +42,7 @@ interface IState {
             method: string;
             module: string;
         }[];
+        company?: any;
         userShiftId?: IUserShift;
     };
     activeMenu: string;
@@ -52,6 +57,11 @@ const initialState: IState = {
         _id: "",
         email: "",
         name: "",
+        image: "",
+        age: undefined,
+        gender: undefined,
+        address: undefined,
+        employeeType: undefined,
         role: {
             _id: "",
             name: "",
@@ -60,7 +70,6 @@ const initialState: IState = {
         company: undefined,
         userShiftId: undefined
     },
-
     activeMenu: 'home'
 };
 
@@ -79,6 +88,11 @@ export const accountSlide = createSlice({
             state.user._id = action?.payload?._id;
             state.user.email = action.payload.email;
             state.user.name = action.payload.name;
+            state.user.image = action.payload.image;
+            state.user.age = action.payload.age;
+            state.user.gender = action.payload.gender;
+            state.user.address = action.payload.address;
+            state.user.employeeType = action.payload.employeeType;
             state.user.role = action?.payload?.role;
             state.user.permissions = action?.payload?.permissions;
             state.user.userShiftId = action?.payload?.userShiftId;
@@ -90,6 +104,11 @@ export const accountSlide = createSlice({
                 _id: "",
                 email: "", 
                 name: "",
+                image: "",
+                age: undefined,
+                gender: undefined,
+                address: undefined,
+                employeeType: undefined,
                 company: undefined,
                 userShiftId: undefined,
                 role: {
@@ -121,6 +140,11 @@ export const accountSlide = createSlice({
                 state.user._id = action?.payload?.user?._id;
                 state.user.email = action.payload.user?.email;
                 state.user.name = action.payload.user?.name;
+                state.user.image = action.payload.user?.image;
+                state.user.age = action.payload.user?.age;
+                state.user.gender = action.payload.user?.gender;
+                state.user.address = action.payload.user?.address;
+                state.user.employeeType = action.payload.user?.employeeType;
                 state.user.role = action?.payload?.user?.role;
                 state.user.permissions = action?.payload?.user?.permissions;
                 state.user.userShiftId = action?.payload?.user?.userShiftId;

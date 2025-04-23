@@ -16,12 +16,13 @@ import {
 import { Layout, Menu, Dropdown, Space, message, Avatar, Button } from 'antd';
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Link } from 'react-router-dom';
-import { callLogout } from 'config/api';
+import { callLogout, callGetProfile } from 'config/api';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { isMobile } from 'react-device-detect';
 import type { MenuProps } from 'antd';
 import { setLogoutAction } from '@/redux/slice/accountSlide';
 import { ALL_PERMISSIONS } from '@/config/permissions';
+import { IAccount } from '@/types/backend';
 
 const { Content, Footer, Sider } = Layout;
 
@@ -30,7 +31,7 @@ const LayoutAdmin = () => {
 
     const [collapsed, setCollapsed] = useState(false);
     const [activeMenu, setActiveMenu] = useState('');
-    const user = useAppSelector(state => state.account.user);
+    const user = useAppSelector(state => state.account.user) as IAccount['user'];
 
     const permissions = useAppSelector(state => state.account.user.permissions);
     const [menuItems, setMenuItems] = useState<MenuProps['items']>([]);
@@ -67,8 +68,8 @@ const LayoutAdmin = () => {
 
             const full = [
                 {
-                    label: <Link to='/admin'>Bảng điều khiển</Link>,
-                    key: '/admin',
+                    label: <Link to='/admin/dashboard'>Bảng điều khiển</Link>,
+                    key: '/admin/dashboard',
                     icon: <AppstoreOutlined />
                 },
                 ...(viewUser ? [{
@@ -115,7 +116,7 @@ const LayoutAdmin = () => {
 
             setMenuItems(full);
         }
-    }, [permissions])
+    }, [permissions, user])
     useEffect(() => {
         setActiveMenu(location.pathname)
     }, [location])
@@ -131,8 +132,14 @@ const LayoutAdmin = () => {
 
     const itemsDropdown = [
         {
-            label: <Link to={'/'}>Trang chủ</Link>,
+            label: <Link to={'/admin'}>Trang chủ</Link>,
             key: 'home',
+            icon: <AppstoreOutlined />,
+        },
+        {
+            label: <Link to={'/admin/profile'}>Thông tin cá nhân</Link>,
+            key: 'profile',
+            icon: <UserOutlined />,
         },
         {
             label: <label
@@ -140,6 +147,7 @@ const LayoutAdmin = () => {
                 onClick={() => handleLogout()}
             >Đăng xuất</label>,
             key: 'logout',
+            icon: <LogoutOutlined />,
         },
     ];
 
@@ -155,8 +163,26 @@ const LayoutAdmin = () => {
                         collapsible
                         collapsed={collapsed}
                         onCollapse={(value) => setCollapsed(value)}>
-                        <div style={{ height: 32, margin: 16, textAlign: 'center' }}>
-                            <BugOutlined />  ADMIN
+                        <div 
+                            style={{ 
+                                margin: 16, 
+                                textAlign: 'center',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                cursor: 'pointer'
+                            }}
+                            onClick={() => navigate('/admin')}
+                        >
+                            <img 
+                                src={`${import.meta.env.VITE_BACKEND_URL}/images/company/logo.jpg`}
+                                alt="Company Logo"
+                                style={{ 
+                                    height: collapsed ? '50px' : '90px',
+                                    width: 'auto',
+                                    transition: 'all 0.2s'
+                                }}
+                            />
                         </div>
                         <Menu
                             selectedKeys={[activeMenu]}
@@ -190,8 +216,12 @@ const LayoutAdmin = () => {
 
                             <Dropdown menu={{ items: itemsDropdown }} trigger={['click']}>
                                 <Space style={{ cursor: "pointer" }}>
-                                    Welcome {user?.name}
-                                    <Avatar> {user?.name?.substring(0, 2)?.toUpperCase()} </Avatar>
+                                    {user?.name}
+                                    <Avatar 
+                                        src={user?.image ? `${import.meta.env.VITE_BACKEND_URL}/images/user/${user.image}` : null}
+                                        icon={!user?.image && <UserOutlined />}
+                                    >
+                                    </Avatar>
                                 </Space>
                             </Dropdown>
                         </div>
