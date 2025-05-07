@@ -19,7 +19,7 @@ const WEBCAM_CONSTRAINTS = {
     width: CAPTURE_WIDTH,
     height: CAPTURE_HEIGHT,
     facingMode: "user",
-    aspectRatio: 4/3
+    aspectRatio: 4 / 3
 };
 
 interface IProps {
@@ -205,7 +205,6 @@ const ModalUser = (props: IProps) => {
             address: JSON.stringify(address).replace(/\\"/g, '"'),
             role: role?.value || dataInit?.role?._id,
             employeeType,
-            permissions: [],
         };
 
         // Only include image and faceDescriptor if they have been changed
@@ -321,7 +320,7 @@ const ModalUser = (props: IProps) => {
                                 // If not JSON, try to parse from string format
                                 const address = dataInit.address;
                                 const parts = address.split(',').map(part => part.trim());
-                                
+
                                 // Assuming format: detail, ward, district, city
                                 return {
                                     detail: parts[0] || '', // "216/174, đường số 5"
@@ -456,13 +455,13 @@ const ModalUser = (props: IProps) => {
                         />
                     </Col>
 
-                    <AddressForm 
-                        form={form} 
+                    <AddressForm
+                        form={form}
                         initialAddress={dataInit?.address}
                     />
 
                     <Col lg={12} md={12} sm={24} xs={24}>
-                        <Form.Item 
+                        <Form.Item
                             label="Ảnh Face ID"
                             required
                             help="Vui lòng giữ khuôn mặt tự nhiên, nhìn thẳng vào camera"
@@ -540,7 +539,7 @@ const ModalUser = (props: IProps) => {
                     <div style={{ textAlign: 'center', padding: '20px' }}>
                         <Space direction="vertical">
                             <div>{cameraError}</div>
-                            <Button 
+                            <Button
                                 icon={<RetweetOutlined />}
                                 onClick={() => {
                                     setCameraError(null);
@@ -563,7 +562,7 @@ const ModalUser = (props: IProps) => {
                                 onUserMediaError={handleCameraError}
                                 style={{ width: '100%', borderRadius: '8px' }}
                             />
-                            <div 
+                            <div
                                 style={{
                                     position: 'absolute',
                                     top: '50%',

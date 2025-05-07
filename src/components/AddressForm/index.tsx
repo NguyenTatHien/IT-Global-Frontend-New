@@ -17,7 +17,7 @@ export interface IAddress {
     detail: string;
 }
 
-interface ILocation {
+export interface ILocation {
     code: string;
     name: string;
 }
@@ -47,48 +47,57 @@ const AddressForm: React.FC<IAddressFormProps> = ({ disabled = false, form, init
                     const addressObj = JSON.parse(initialAddress);
                     if (addressObj && typeof addressObj === 'object') {
                         setIsLegacyAddress(false);
-                        
+
                         // Fetch cities first
                         const citiesData = await fetchCities();
-                        
-                        if (addressObj.city) {
-                            setSelectedCity(addressObj.city);
-                            form.setFieldValue('city', addressObj.city);
-                            
-                            // Fetch districts
-                            try {
-                                const districtResponse = await fetch(`https://provinces.open-api.vn/api/p/${addressObj.city}?depth=2`);
-                                const districtData = await districtResponse.json();
-                                setDistricts(districtData.districts);
-                                setCityName(districtData.name);
-                                
-                                if (addressObj.district) {
-                                    setSelectedDistrict(addressObj.district);
-                                    form.setFieldValue('district', addressObj.district);
-                                    
-                                    // Fetch wards
-                                    try {
-                                        const wardResponse = await fetch(`https://provinces.open-api.vn/api/d/${addressObj.district}?depth=2`);
-                                        const wardData = await wardResponse.json();
-                                        setWards(wardData.wards);
-                                        setDistrictName(wardData.name);
-                                        
-                                        if (addressObj.ward) {
-                                            form.setFieldValue('ward', addressObj.ward);
-                                            const selectedWard = wardData.wards.find((w: any) => w.code === addressObj.ward);
-                                            if (selectedWard) {
-                                                setWardName(selectedWard.name);
-                                            }
-                                        }
-                                    } catch (error) {
-                                        console.error('Error fetching wards:', error);
-                                    }
-                                }
-                            } catch (error) {
-                                console.error('Error fetching districts:', error);
+                        let cityCode = addressObj.city;
+                        let districtCode = addressObj.district;
+                        let wardCode = addressObj.ward;
+
+                        // Nếu city là name, ánh xạ sang code
+                        if (citiesData && citiesData.length && !citiesData.find((c: ILocation) => c.code === addressObj.city)) {
+                            const foundCity = citiesData.find((c: ILocation) => c.name === addressObj.city);
+                            if (foundCity) {
+                                cityCode = foundCity.code;
                             }
                         }
+                        setSelectedCity(cityCode);
+                        form.setFieldValue('city', addressObj.city); // vẫn set name vào form
 
+                        // Fetch districts
+                        if (cityCode) {
+                            const districtResponse = await fetch(`https://provinces.open-api.vn/api/p/${cityCode}?depth=2`);
+                            const districtData = await districtResponse.json();
+                            setDistricts(districtData.districts);
+                            setCityName(districtData.name);
+
+                            // Nếu district là name, ánh xạ sang code
+                            if (districtData.districts && districtData.districts.length && !districtData.districts.find((d: ILocation) => d.code === addressObj.district)) {
+                                const foundDistrict = districtData.districts.find((d: ILocation) => d.name === addressObj.district);
+                                if (foundDistrict) {
+                                    districtCode = foundDistrict.code;
+                                }
+                            }
+                            setSelectedDistrict(districtCode);
+                            form.setFieldValue('district', addressObj.district); // vẫn set name vào form
+
+                            // Fetch wards
+                            if (districtCode) {
+                                const wardResponse = await fetch(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`);
+                                const wardData = await wardResponse.json();
+                                setWards(wardData.wards);
+                                setDistrictName(wardData.name);
+
+                                // Nếu ward là name, ánh xạ sang code
+                                if (wardData.wards && wardData.wards.length && !wardData.wards.find((w: ILocation) => w.code === addressObj.ward)) {
+                                    const foundWard = wardData.wards.find((w: ILocation) => w.name === addressObj.ward);
+                                    if (foundWard) {
+                                        wardCode = foundWard.code;
+                                    }
+                                }
+                                form.setFieldValue('ward', addressObj.ward); // vẫn set name vào form
+                            }
+                        }
                         if (addressObj.detail) {
                             form.setFieldValue('detail', addressObj.detail);
                         }
@@ -103,7 +112,6 @@ const AddressForm: React.FC<IAddressFormProps> = ({ disabled = false, form, init
                 }
             }
         };
-
         initializeAddress();
     }, [initialAddress, form]);
 
@@ -124,12 +132,14 @@ const AddressForm: React.FC<IAddressFormProps> = ({ disabled = false, form, init
         setSelectedDistrict('');
         setWards([]);
         form.setFieldsValue({ district: undefined, ward: undefined });
-        
+
         try {
             const response = await fetch(`https://provinces.open-api.vn/api/p/${value}?depth=2`);
             const data = await response.json();
             setDistricts(data.districts);
             setCityName(data.name);
+
+            form.setFieldValue('city', data.name);
         } catch (error) {
             message.error('Có lỗi xảy ra khi tải danh sách quận/huyện');
         }
@@ -139,12 +149,14 @@ const AddressForm: React.FC<IAddressFormProps> = ({ disabled = false, form, init
         setSelectedDistrict(value);
         setWards([]);
         form.setFieldsValue({ ward: undefined });
-        
+
         try {
             const response = await fetch(`https://provinces.open-api.vn/api/d/${value}?depth=2`);
             const data = await response.json();
             setWards(data.wards);
             setDistrictName(data.name);
+
+            form.setFieldValue('district', data.name);
         } catch (error) {
             message.error('Có lỗi xảy ra khi tải danh sách phường/xã');
         }
@@ -155,6 +167,8 @@ const AddressForm: React.FC<IAddressFormProps> = ({ disabled = false, form, init
         if (selectedWard) {
             setWardName(selectedWard.name);
         }
+
+        form.setFieldValue('ward', selectedWard?.name);
     };
 
     return (
@@ -167,7 +181,7 @@ const AddressForm: React.FC<IAddressFormProps> = ({ disabled = false, form, init
                             label="Tỉnh/Thành phố"
                             rules={[{ required: true, message: 'Vui lòng chọn tỉnh/thành phố' }]}
                         >
-                            <Select 
+                            <Select
                                 disabled={disabled}
                                 onChange={handleCityChange}
                                 placeholder="Chọn tỉnh/thành phố"
@@ -186,7 +200,7 @@ const AddressForm: React.FC<IAddressFormProps> = ({ disabled = false, form, init
                             label="Quận/Huyện"
                             rules={[{ required: true, message: 'Vui lòng chọn quận/huyện' }]}
                         >
-                            <Select 
+                            <Select
                                 disabled={disabled || !selectedCity}
                                 onChange={handleDistrictChange}
                                 placeholder="Chọn quận/huyện"
@@ -205,7 +219,7 @@ const AddressForm: React.FC<IAddressFormProps> = ({ disabled = false, form, init
                             label="Phường/Xã"
                             rules={[{ required: true, message: 'Vui lòng chọn phường/xã' }]}
                         >
-                            <Select 
+                            <Select
                                 disabled={disabled || !selectedDistrict}
                                 placeholder="Chọn phường/xã"
                                 onChange={handleWardChange}
@@ -249,9 +263,9 @@ const AddressForm: React.FC<IAddressFormProps> = ({ disabled = false, form, init
                         label="Địa chỉ"
                         rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
                     >
-                        <Input.TextArea 
-                            disabled={disabled} 
-                            placeholder="Nhập địa chỉ đầy đủ" 
+                        <Input.TextArea
+                            disabled={disabled}
+                            placeholder="Nhập địa chỉ đầy đủ"
                             rows={3}
                         />
                     </Form.Item>

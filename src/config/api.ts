@@ -180,6 +180,7 @@ export const callCreateUser = (user: IUser, file: File) => {
     formData.append("gender", user.gender);
     formData.append("address", user.address);
     formData.append("role", user.role as any);
+    formData.append("employeeType", user.employeeType || "");
     formData.append("image", file);
 
     return axios.post<IBackendRes<IUser>>("/api/v1/users", formData, {

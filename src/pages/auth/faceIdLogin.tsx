@@ -5,8 +5,8 @@ import { fetchAccount } from '@/redux/slice/accountSlide';
 import Webcam from 'react-webcam';
 import styles from '@/styles/faceIdLogin.module.scss';
 import { callLoginWithFaceId } from '@/config/api';
-import { Spin, Button, Typography, message, Alert, Modal, Progress } from 'antd';
-import { CameraOutlined, LoadingOutlined, RedoOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { Spin, Button, Typography, message, Alert, Modal, Progress, Card, Space } from 'antd';
+import { CameraOutlined, LoadingOutlined, RedoOutlined, InfoCircleOutlined, UserOutlined, SafetyOutlined } from '@ant-design/icons';
 const { Title, Text } = Typography;
 
 const OPTIMAL_WIDTH = 640;
@@ -284,100 +284,126 @@ const FaceIdLogin: React.FC = () => {
     return (
         <div className={styles.faceIdLogin}>
             <div className={styles.container}>
-                <Title level={2} className={styles.title}>
-                    Đăng nhập bằng Face ID
-                </Title>
-
-                {cameraError ? (
-                    <Alert
-                        message="Lỗi Camera"
-                        description={cameraError}
-                        type="error"
-                        showIcon
-                        className={styles.errorAlert}
-                        action={
-                            <Button type="primary" onClick={() => window.location.reload()}>
-                                Thử lại
-                            </Button>
-                        }
-                    />
-                ) : (
-                    <>
-                        <div className={styles.instructions}>
-                            <Alert
-                                message="Hướng dẫn chụp ảnh"
-                                description={
-                                    <ul>
-                                        <li>Đảm bảo khuôn mặt nằm giữa khung hình</li>
-                                        <li>Ánh sáng đầy đủ, tránh ngược sáng</li>
-                                        <li>Không đeo kính râm hoặc khẩu trang</li>
-                                        <li>Giữ khuôn mặt thẳng và tự nhiên</li>
-                                        <li>Nhìn thẳng vào camera</li>
-                                        <li>Giữ khoảng cách 30-50cm với camera</li>
-                                        <li>Đợi camera lấy nét trước khi chụp</li>
-                                    </ul>
-                                }
-                                type="info"
-                                showIcon
-                                icon={<InfoCircleOutlined />}
-                            />
+                <Card className={styles.loginCard}>
+                    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                        <div className={styles.header}>
+                            <Title level={2} className={styles.title}>
+                                <SafetyOutlined /> Đăng nhập bằng Face ID
+                            </Title>
+                            <Text type="secondary" className={styles.subtitle}>
+                                Hệ thống nhận diện khuôn mặt an toàn và bảo mật
+                            </Text>
                         </div>
 
-                        <div className={styles.webcamContainer}>
-                            <div className={styles.faceGuide}></div>
-                            <Webcam
-                                audio={false}
-                                ref={webcamRef}
-                                screenshotFormat="image/jpeg"
-                                className={styles.webcam}
-                                videoConstraints={{
-                                    width: OPTIMAL_WIDTH,
-                                    height: OPTIMAL_HEIGHT,
-                                    facingMode: "user",
-                                    aspectRatio: 4/3
-                                }}
-                                onUserMediaError={handleCameraError}
-                            />
-                            {loading && (
-                                <div className={styles.processingOverlay}>
-                                    <Spin size="large" />
-                                    <Progress 
-                                        type="circle"
-                                        percent={processingProgress}
-                                        width={80}
-                                        status={processingProgress === 100 ? "success" : "active"}
-                                    />
-                                    <Text>Đang xử lý...</Text>
-                                </div>
-                            )}
-                        </div>
-
-                        {error && (
+                        {cameraError ? (
                             <Alert
-                                message="Lỗi"
-                                description={error}
+                                message="Lỗi Camera"
+                                description={cameraError}
                                 type="error"
                                 showIcon
                                 className={styles.errorAlert}
-                                closable
-                                onClose={() => setError(null)}
+                                action={
+                                    <Button type="primary" onClick={() => window.location.reload()}>
+                                        Thử lại
+                                    </Button>
+                                }
                             />
-                        )}
+                        ) : (
+                            <>
+                                <div className={styles.instructions}>
+                                    <Card className={styles.instructionCard}>
+                                        <Space direction="vertical" size="middle">
+                                            <div className={styles.instructionHeader}>
+                                                <InfoCircleOutlined /> Hướng dẫn chụp ảnh
+                                            </div>
+                                            <div className={styles.instructionList}>
+                                                <div className={styles.instructionItem}>
+                                                    <UserOutlined /> Đảm bảo khuôn mặt nằm giữa khung hình
+                                                </div>
+                                                <div className={styles.instructionItem}>
+                                                    <UserOutlined /> Ánh sáng đầy đủ, tránh ngược sáng
+                                                </div>
+                                                <div className={styles.instructionItem}>
+                                                    <UserOutlined /> Không đeo kính râm hoặc khẩu trang
+                                                </div>
+                                                <div className={styles.instructionItem}>
+                                                    <UserOutlined /> Giữ khuôn mặt thẳng và tự nhiên
+                                                </div>
+                                                <div className={styles.instructionItem}>
+                                                    <UserOutlined /> Nhìn thẳng vào camera
+                                                </div>
+                                                <div className={styles.instructionItem}>
+                                                    <UserOutlined /> Giữ khoảng cách 30-50cm với camera
+                                                </div>
+                                            </div>
+                                        </Space>
+                                    </Card>
+                                </div>
 
-                        <div className={styles.buttonContainer}>
-                            <Button
-                                type="primary"
-                                icon={loading ? <LoadingOutlined /> : <CameraOutlined />}
-                                onClick={handleLogin}
-                                disabled={loading}
-                                className={styles.loginButton}
-                                size="large"
-                            >
-                                {loading ? 'Đang xử lý...' : 'Đăng nhập'}
-                            </Button>
-                        </div>
-                    </>
-                )}
+                                <div className={styles.webcamContainer}>
+                                    <div className={styles.faceGuide}>
+                                        <div className={styles.faceGuideInner}></div>
+                                    </div>
+                                    <Webcam
+                                        audio={false}
+                                        ref={webcamRef}
+                                        screenshotFormat="image/jpeg"
+                                        className={styles.webcam}
+                                        videoConstraints={{
+                                            width: OPTIMAL_WIDTH,
+                                            height: OPTIMAL_HEIGHT,
+                                            facingMode: "user",
+                                            aspectRatio: 4/3
+                                        }}
+                                        onUserMediaError={handleCameraError}
+                                    />
+                                    {loading && (
+                                        <div className={styles.processingOverlay}>
+                                            <Spin size="large" />
+                                            <Progress 
+                                                type="circle"
+                                                percent={processingProgress}
+                                                width={80}
+                                                status={processingProgress === 100 ? "success" : "active"}
+                                                strokeColor={{
+                                                    '0%': '#108ee9',
+                                                    '100%': '#87d068',
+                                                }}
+                                            />
+                                            <Text>Đang xử lý...</Text>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {error && (
+                                    <Alert
+                                        message="Lỗi"
+                                        description={error}
+                                        type="error"
+                                        showIcon
+                                        className={styles.errorAlert}
+                                        closable
+                                        onClose={() => setError(null)}
+                                    />
+                                )}
+
+                                <div className={styles.buttonContainer}>
+                                    <Button
+                                        type="primary"
+                                        icon={loading ? <LoadingOutlined /> : <CameraOutlined />}
+                                        onClick={handleLogin}
+                                        disabled={loading}
+                                        className={styles.loginButton}
+                                        size="large"
+                                        block
+                                    >
+                                        {loading ? 'Đang xử lý...' : 'Đăng nhập bằng Face ID'}
+                                    </Button>
+                                </div>
+                            </>
+                        )}
+                    </Space>
+                </Card>
             </div>
         </div>
     );

@@ -27,62 +27,80 @@ const ProfilePage = () => {
     const [selectedCity, setSelectedCity] = useState<string>('');
     const [selectedDistrict, setSelectedDistrict] = useState<string>('');
 
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const res = await callGetProfile();
-                if (res?.data) {
-                    setUserData(res.data);
-                    
-                    // Parse address from JSON string
-                    let addressObj = {
-                        city: '',
-                        district: '',
-                        ward: '',
-                        detail: ''
-                    };
-
-                    if (res.data.address) {
-                        try {
-                            const parsedAddress = JSON.parse(res.data.address.replace(/\\"/g, '"'));
-                            addressObj = {
-                                city: parsedAddress.city,
-                                district: parsedAddress.district,
-                                ward: parsedAddress.ward,
-                                detail: parsedAddress.detail
-                            };
-                        } catch (error) {
-                            console.error('Error parsing address:', error);
-                        }
-                    }
-
-                    // Set form values including parsed address
-                    form.setFieldsValue({
-                        name: res.data.name,
-                        email: res.data.email,
-                        age: res.data.age,
-                        gender: res.data.gender,
-                        employeeType: res.data.employeeType,
-                        city: addressObj.city,
-                        district: addressObj.district,
-                        ward: addressObj.ward,
-                        detail: addressObj.detail
-                    });
-
-                    // If we have numeric codes, trigger the cascading selects
-                    if (addressObj.city) {
-                        setSelectedCity(addressObj.city);
-                        fetchDistrictsByCity(addressObj.city);
-                        if (addressObj.district) {
-                            setSelectedDistrict(addressObj.district);
-                            fetchWardsByDistrict(addressObj.district);
-                        }
+    // Đưa fetchUserData ra ngoài useEffect để có thể gọi lại sau khi cập nhật
+    const fetchUserData = async () => {
+        try {
+            const res = await callGetProfile();
+            if (res?.data) {
+                setUserData(res.data);
+                // Parse address from JSON string
+                let addressObj = {
+                    city: '',
+                    district: '',
+                    ward: '',
+                    detail: ''
+                };
+                if (res.data.address) {
+                    try {
+                        const parsedAddress = JSON.parse(res.data.address.replace(/\\"/g, '"'));
+                        addressObj = {
+                            city: parsedAddress.city,
+                            district: parsedAddress.district,
+                            ward: parsedAddress.ward,
+                            detail: parsedAddress.detail
+                        };
+                    } catch (error) {
+                        console.error('Error parsing address:', error);
                     }
                 }
-            } catch (error) {
-                message.error('Có lỗi xảy ra khi tải thông tin người dùng');
+                // Ánh xạ name -> code để fetch danh sách và set code vào form
+                const fetchAll = async () => {
+                    // Fetch cities
+                    const citiesRes = await fetch('https://provinces.open-api.vn/api/');
+                    const citiesData = await citiesRes.json();
+                    setCities(citiesData);
+                    const cityObj = citiesData.find((c: any) => c.name === addressObj.city);
+                    if (cityObj) {
+                        setSelectedCity(cityObj.code);
+                        form.setFieldValue('city', cityObj.code); // set code vào form
+                        // Fetch districts
+                        const districtsRes = await fetch(`https://provinces.open-api.vn/api/p/${cityObj.code}?depth=2`);
+                        const districtsData = await districtsRes.json();
+                        setDistricts(districtsData.districts);
+                        const districtObj = districtsData.districts.find((d: any) => d.name === addressObj.district);
+                        if (districtObj) {
+                            setSelectedDistrict(districtObj.code);
+                            form.setFieldValue('district', districtObj.code); // set code vào form
+                            // Fetch wards
+                            const wardsRes = await fetch(`https://provinces.open-api.vn/api/d/${districtObj.code}?depth=2`);
+                            const wardsData = await wardsRes.json();
+                            setWards(wardsData.wards);
+                            const wardObj = wardsData.wards.find((w: any) => w.name === addressObj.ward);
+                            if (wardObj) {
+                                form.setFieldValue('ward', wardObj.code); // set code vào form
+                            }
+                        }
+                    }
+                    // Set các trường còn lại
+                    if (res.data) {
+                        form.setFieldsValue({
+                            name: res.data.name,
+                            email: res.data.email,
+                            age: res.data.age,
+                            gender: res.data.gender,
+                            employeeType: res.data.employeeType,
+                            detail: addressObj.detail
+                        });
+                    }
+                };
+                fetchAll();
             }
-        };
+        } catch (error) {
+            message.error('Có lỗi xảy ra khi tải thông tin người dùng');
+        }
+    };
+
+    useEffect(() => {
         fetchUserData();
     }, []);
 
@@ -150,25 +168,24 @@ const ProfilePage = () => {
     const handleSubmit = async (values: any) => {
         try {
             setLoading(true);
+            const cityObj = cities.find((c: any) => c.code === values.city);
+            const districtObj = districts.find((d: any) => d.code === values.district);
+            const wardObj = wards.find((w: any) => w.code === values.ward);
             const address = {
-                city: values.city,
-                district: values.district,
-                ward: values.ward,
+                city: cityObj?.name || '',
+                district: districtObj?.name || '',
+                ward: wardObj?.name || '',
                 detail: values.detail
             };
-
             const res = await callUpdateUser(user._id, {
                 ...values,
                 address: JSON.stringify(address)
             });
-
             if (res?.data) {
                 message.success('Cập nhật thông tin thành công');
                 setIsEditing(false);
-                const updatedUser = await callGetProfile();
-                if (updatedUser?.data) {
-                    setUserData(updatedUser.data);
-                }
+                // Gọi lại fetchUserData để ánh xạ lại code cho form
+                await fetchUserData();
             }
         } catch (error) {
             message.error('Có lỗi xảy ra');
@@ -195,11 +212,11 @@ const ProfilePage = () => {
                     {/* Cột trái - Avatar và thông tin cơ bản */}
                     <Col xs={24} md={8}>
                         <div style={{ textAlign: 'center' }}>
-                            <Avatar 
-                                size={200} 
+                            <Avatar
+                                size={200}
                                 src={userData?.image ? `${import.meta.env.VITE_BACKEND_URL}/images/user/${userData.image}` : null}
                                 icon={!userData?.image && <UserOutlined />}
-                                style={{ 
+                                style={{
                                     border: '4px solid #fff',
                                     boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
                                 }}
@@ -217,14 +234,14 @@ const ProfilePage = () => {
                             <Title level={4} style={{ margin: 0 }}>Thông tin cá nhân</Title>
                             {isEditing ? (
                                 <Space>
-                                    <Button 
+                                    <Button
                                         type="default"
                                         icon={<CloseOutlined />}
                                         onClick={handleCancel}
                                     >
                                         Hủy
                                     </Button>
-                                    <Button 
+                                    <Button
                                         type="primary"
                                         icon={<SaveOutlined />}
                                         onClick={() => form.submit()}
@@ -234,7 +251,7 @@ const ProfilePage = () => {
                                     </Button>
                                 </Space>
                             ) : (
-                                <Button 
+                                <Button
                                     type="default"
                                     icon={<EditOutlined />}
                                     onClick={() => setIsEditing(true)}
@@ -313,7 +330,7 @@ const ProfilePage = () => {
                                         label="Tỉnh/Thành phố"
                                         rules={[{ required: true, message: 'Vui lòng chọn tỉnh/thành phố' }]}
                                     >
-                                        <Select 
+                                        <Select
                                             disabled={!isEditing}
                                             onChange={handleCityChange}
                                             placeholder="Chọn tỉnh/thành phố"
@@ -332,7 +349,7 @@ const ProfilePage = () => {
                                         label="Quận/Huyện"
                                         rules={[{ required: true, message: 'Vui lòng chọn quận/huyện' }]}
                                     >
-                                        <Select 
+                                        <Select
                                             disabled={!isEditing || !selectedCity}
                                             onChange={handleDistrictChange}
                                             placeholder="Chọn quận/huyện"
@@ -351,7 +368,7 @@ const ProfilePage = () => {
                                         label="Phường/Xã"
                                         rules={[{ required: true, message: 'Vui lòng chọn phường/xã' }]}
                                     >
-                                        <Select 
+                                        <Select
                                             disabled={!isEditing || !selectedDistrict}
                                             placeholder="Chọn phường/xã"
                                         >
