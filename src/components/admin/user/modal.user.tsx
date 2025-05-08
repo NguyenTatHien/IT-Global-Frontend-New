@@ -275,10 +275,12 @@ const ModalUser = (props: IProps) => {
     async function fetchRoleList(name: string): Promise<ICompanySelect[]> {
         const res = await callFetchRole(`current=1&pageSize=100&name=/${name}/i`);
         if (res?.data?.result) {
-            return res.data.result.map(item => ({
-                label: item.name as string,
-                value: item._id as string,
-            }));
+            return res.data.result
+                .filter(item => item.isActive === true)
+                .map(item => ({
+                    label: item.name as string,
+                    value: item._id as string,
+                }));
         }
         return [];
     }

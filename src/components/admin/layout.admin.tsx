@@ -12,6 +12,8 @@ import {
     HistoryOutlined,
     TeamOutlined,
     CalendarOutlined,
+    BarChartOutlined,
+    DollarOutlined,
 } from '@ant-design/icons';
 import { Layout, Menu, Dropdown, Space, message, Avatar, Button } from 'antd';
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -66,6 +68,21 @@ const LayoutAdmin = () => {
                 && item.method === ALL_PERMISSIONS.USER_SHIFTS.GET_PAGINATE.method
             )
 
+            const viewReport = permissions.find(item =>
+                item.apiPath === ALL_PERMISSIONS.REPORTS.GET_PAGINATE.apiPath
+                && item.method === ALL_PERMISSIONS.REPORTS.GET_PAGINATE.method
+            )
+
+            const viewLeaveRequest = permissions.find(item =>
+                item.apiPath === ALL_PERMISSIONS.LEAVE_REQUESTS.GET_PAGINATE.apiPath
+                && item.method === ALL_PERMISSIONS.LEAVE_REQUESTS.GET_PAGINATE.method
+            )
+
+            const viewPayroll = permissions.find(item =>
+                item.apiPath === ALL_PERMISSIONS.PAYROLL.GET_PAGINATE.apiPath
+                && item.method === ALL_PERMISSIONS.PAYROLL.GET_PAGINATE.method
+            )
+
             const full = [
                 {
                     label: <Link to='/admin/dashboard'>Bảng điều khiển</Link>,
@@ -112,6 +129,21 @@ const LayoutAdmin = () => {
                     key: '/admin/my-shifts',
                     icon: <CalendarOutlined />
                 },
+                ...(viewLeaveRequest ? [{
+                    label: <Link to='/admin/leave-request'>Đơn xin nghỉ phép</Link>,
+                    key: '/admin/leave-request',
+                    icon: <CalendarOutlined />
+                }] : []),
+                ...(viewPayroll ? [{
+                    label: <Link to='/admin/payroll'>Bảng lương</Link>,
+                    key: '/admin/payroll',
+                    icon: <DollarOutlined />
+                }] : []),
+                ...(viewReport ? [{
+                    label: <Link to='/admin/reports'>Thống kê báo cáo</Link>,
+                    key: '/admin/reports',
+                    icon: <BarChartOutlined />
+                }] : []),
             ];
 
             setMenuItems(full);
@@ -163,9 +195,9 @@ const LayoutAdmin = () => {
                         collapsible
                         collapsed={collapsed}
                         onCollapse={(value) => setCollapsed(value)}>
-                        <div 
-                            style={{ 
-                                margin: 16, 
+                        <div
+                            style={{
+                                margin: 16,
                                 textAlign: 'center',
                                 display: 'flex',
                                 justifyContent: 'center',
@@ -174,10 +206,10 @@ const LayoutAdmin = () => {
                             }}
                             onClick={() => navigate('/admin')}
                         >
-                            <img 
+                            <img
                                 src={`${import.meta.env.VITE_BACKEND_URL}/images/company/logo.jpg`}
                                 alt="Company Logo"
-                                style={{ 
+                                style={{
                                     height: collapsed ? '50px' : '90px',
                                     width: 'auto',
                                     transition: 'all 0.2s'
@@ -217,7 +249,7 @@ const LayoutAdmin = () => {
                             <Dropdown menu={{ items: itemsDropdown }} trigger={['click']}>
                                 <Space style={{ cursor: "pointer" }}>
                                     {user?.name}
-                                    <Avatar 
+                                    <Avatar
                                         src={user?.image ? `${import.meta.env.VITE_BACKEND_URL}/images/user/${user.image}` : null}
                                         icon={!user?.image && <UserOutlined />}
                                     >

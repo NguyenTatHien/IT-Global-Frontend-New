@@ -15,6 +15,7 @@ import HomePage from './pages/admin/home';
 import PermissionPage from './pages/admin/permission';
 import RolePage from './pages/admin/role';
 import UserPage from './pages/admin/user';
+import ReportsPage from './pages/admin/reports';
 import { fetchAccount } from './redux/slice/accountSlide';
 import LayoutApp from './components/share/layout.app';
 import FaceIdLogin from './pages/auth/faceIdLogin';
@@ -27,6 +28,8 @@ import { ConfigProvider } from 'antd';
 import vi from 'antd/locale/vi_VN';
 import MyShifts from './components/admin/user-shifts/MyShifts';
 import Profile from './pages/admin/profile';
+import LeaveRequestPage from './pages/admin/leave-request';
+import PayrollPage from './pages/admin/payroll';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -35,7 +38,7 @@ export default function App() {
 
   useEffect(() => {
     if (
-      window.location.pathname === '/login' || 
+      window.location.pathname === '/login' ||
       // window.location.pathname === '/register' ||
       window.location.pathname === '/face-id-login'
       // window.location.pathname === '/face-id-register'
@@ -59,7 +62,7 @@ export default function App() {
     // },
     {
       path: "/",
-      element: <Navigate to="/admin" replace/>,
+      element: <Navigate to="/admin" replace />,
     },
 
     {
@@ -102,6 +105,13 @@ export default function App() {
             </ProtectedRoute>
         },
         {
+          path: "reports",
+          element:
+            <ProtectedRoute>
+              <ReportsPage />
+            </ProtectedRoute>
+        },
+        {
           path: "check-in-out",
           element:
             <ProtectedRoute>
@@ -141,6 +151,20 @@ export default function App() {
           element:
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+        },
+        {
+          path: "leave-request",
+          element:
+            <ProtectedRoute>
+              <LeaveRequestPage />
+            </ProtectedRoute>
+        },
+        {
+          path: "payroll",
+          element:
+            <ProtectedRoute>
+              <PayrollPage />
             </ProtectedRoute>
         }
       ],

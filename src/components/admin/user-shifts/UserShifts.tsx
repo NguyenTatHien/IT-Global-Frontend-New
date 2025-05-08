@@ -105,8 +105,8 @@ const UserShiftManagement: React.FC = () => {
                 const userOptions = usersRes.data.result
                     .filter((user: any) => user.employeeType !== 'intern')
                     .map((user: any) => ({
-                        label: `${user.name} (${user.email})${user.employeeType === 'official' ? ' - Nhân viên chính thức' : 
-                               user.employeeType === 'contract' ? ' - Nhân viên hợp đồng' : ''}`,
+                        label: `${user.name} (${user.email})${user.employeeType === 'official' ? ' - Nhân viên chính thức' :
+                            user.employeeType === 'contract' ? ' - Nhân viên hợp đồng' : ''}`,
                         value: user._id,
                         employeeType: user.employeeType
                     }));
@@ -114,10 +114,12 @@ const UserShiftManagement: React.FC = () => {
             }
 
             if (shiftsRes?.data?.result) {
-                const shiftOptions = shiftsRes.data.result.map((shift: any) => ({
-                    label: `${shift.name} (${shift.startTime}-${shift.endTime})`,
-                    value: shift._id
-                }));
+                const shiftOptions = shiftsRes.data.result
+                    .filter((shift: any) => shift.status === "active")
+                    .map((shift: any) => ({
+                        label: `${shift.name} (${shift.startTime}-${shift.endTime})`,
+                        value: shift._id
+                    }));
                 setShifts(shiftOptions);
             }
         } catch (error: any) {
@@ -170,7 +172,7 @@ const UserShiftManagement: React.FC = () => {
         setIsModalLoading(true);
         try {
             const { date, ...rest } = values;
-            
+
             // Kiểm tra loại nhân viên và ngày được chọn
             const selectedUser = users.find(user => user.value === rest.userId);
             if (selectedUser?.employeeType === 'official') {
@@ -278,7 +280,7 @@ const UserShiftManagement: React.FC = () => {
     const getStatusColor = (status: string, date: string) => {
         const shiftDate = dayjs(date).startOf('day');
         const today = dayjs().startOf('day');
-        
+
         // Nếu ngày phân ca đã qua
         if (shiftDate.isBefore(today)) {
             return 'red';
@@ -299,7 +301,7 @@ const UserShiftManagement: React.FC = () => {
     const getStatusText = (status: string, date: string) => {
         const shiftDate = dayjs(date).startOf('day');
         const today = dayjs().startOf('day');
-        
+
         // Nếu ngày phân ca đã qua
         if (shiftDate.isBefore(today)) {
             return 'Ngừng hoạt động';

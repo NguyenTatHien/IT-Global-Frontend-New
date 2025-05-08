@@ -32,7 +32,22 @@ export const ALL_PERMISSIONS = {
         CREATE: { method: "POST", apiPath: '/api/v1/user-shifts', module: "USER_SHIFTS" },
         UPDATE: { method: "PATCH", apiPath: '/api/v1/user-shifts/:id', module: "USER_SHIFTS" },
         DELETE: { method: "DELETE", apiPath: '/api/v1/user-shifts/:id', module: "USER_SHIFTS" },
-    }
+    },
+    REPORTS: {
+        GET_PAGINATE: { method: "POST", apiPath: '/api/v1/reports', module: "REPORTS" },
+    },
+    LEAVE_REQUESTS: {
+        GET_PAGINATE: { method: "GET", apiPath: '/api/v1/leave-requests', module: "LEAVE_REQUESTS" },
+        CREATE: { method: "POST", apiPath: '/api/v1/leave-requests', module: "LEAVE_REQUESTS" },
+        UPDATE: { method: "PATCH", apiPath: '/api/v1/leave-requests/:id', module: "LEAVE_REQUESTS" },
+        DELETE: { method: "DELETE", apiPath: '/api/v1/leave-requests/:id', module: "LEAVE_REQUESTS" },
+    },
+    PAYROLL: {
+        GET_PAGINATE: { method: "GET", apiPath: '/api/v1/payroll', module: "PAYROLL" },
+        CREATE: { method: "POST", apiPath: '/api/v1/payroll', module: "PAYROLL" },
+        UPDATE: { method: "PATCH", apiPath: '/api/v1/payroll/:id', module: "PAYROLL" },
+        DELETE: { method: "DELETE", apiPath: '/api/v1/payroll/:id', module: "PAYROLL" },
+    },
 }
 
 export const ALL_MODULES = {
@@ -43,5 +58,8 @@ export const ALL_MODULES = {
     USERS: 'USERS',
     ATTENDANCE: 'ATTENDANCE',
     SHIFTS: 'SHIFTS',
-    USER_SHIFTS: 'USER_SHIFTS'
+    USER_SHIFTS: 'USER_SHIFTS',
+    REPORTS: 'REPORTS',
+    LEAVE_REQUESTS: 'LEAVE_REQUESTS',
+    PAYROLL: 'PAYROLL'
 }

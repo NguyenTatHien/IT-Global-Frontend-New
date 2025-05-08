@@ -87,7 +87,7 @@ export const callLoginWithFaceId = async (fileDescriptor: File) => {
             );
 
             // Check for specific error messages in response
-            if (response.data?.message?.includes('Invalid response format') || 
+            if (response.data?.message?.includes('Invalid response format') ||
                 response.data?.message?.includes('không hợp lệ')) {
                 throw new Error('Không thể xác thực khuôn mặt. Vui lòng thử lại với ánh sáng tốt hơn.');
             }
@@ -348,9 +348,83 @@ export const callGetTodayAttendance = () => {
 }
 
 export const callGetMyAttendance = (query: string) => {
-    return axios.get<IBackendRes<IAttendanceData>>(`/api/v1/attendance/my-attendance?${query}`);
+    return axios.get<IBackendRes<IAttendanceData>>(`/api/v1/attendance/my-attendance?${query}`)
 }
 
 export const callGetProfile = () => {
-    return axios.get<IBackendRes<IUser>>('/api/v1/users/profile/me');
+    return axios.get<IBackendRes<IUser>>('/api/v1/users/profile/me')
+}
+
+/**
+ * Module Reports
+ */
+export const callGenerateReport = (data: {
+    startDate: string;
+    endDate: string;
+    type: 'daily' | 'weekly' | 'monthly';
+    userId?: string;
+}) => {
+    return axios.post<IBackendRes<any>>('/api/v1/reports', data);
+}
+
+/**
+ * Module Leave Requests
+ */
+export const callCreateLeaveRequest = (data: {
+    startDate: string;
+    endDate: string;
+    reason: string;
+    type: 'sick' | 'annual' | 'personal';
+    attachments?: File[];
+}) => {
+    const formData = new FormData();
+    formData.append('startDate', data.startDate);
+    formData.append('endDate', data.endDate);
+    formData.append('reason', data.reason);
+    formData.append('type', data.type);
+    if (data.attachments) {
+        data.attachments.forEach(file => {
+            formData.append('attachments', file);
+        });
+    }
+
+    return axios.post<IBackendRes<any>>('/api/v1/leave-requests', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+}
+
+export const callGetLeaveRequests = (query: string = '') => {
+    return axios.get<IBackendRes<IModelPaginate<any>>>(`/api/v1/leave-requests?${query}`);
+}
+
+export const callGetMyLeaveRequests = (query: string = '') => {
+    return axios.get<IBackendRes<IModelPaginate<any>>>(`/api/v1/leave-requests/my-requests?${query}`);
+}
+
+export const callUpdateLeaveRequest = (id: string, data: {
+    status: 'approved' | 'rejected';
+    comment?: string;
+}) => {
+    return axios.patch<IBackendRes<any>>(`/api/v1/leave-requests/${id}`, data);
+}
+
+/**
+ * Module Payroll
+ */
+export const callGetPayroll = (query: string = '') => {
+    return axios.get<IBackendRes<IModelPaginate<any>>>(`/api/v1/payroll?${query}`);
+}
+
+export const callGetMyPayroll = (query: string = '') => {
+    return axios.get<IBackendRes<IModelPaginate<any>>>(`/api/v1/payroll/my-salary?${query}`);
+}
+
+export const callGeneratePayroll = (data: {
+    month: number;
+    year: number;
+    departmentId?: string;
+}) => {
+    return axios.post<IBackendRes<any>>('/api/v1/payroll/generate', data);
 }
