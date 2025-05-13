@@ -106,25 +106,25 @@ const CheckInOut: React.FC = () => {
     <Card>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <Title level={3}>Chấm công</Title>
-        
+
         <div style={{ textAlign: 'center' }}>
           <ClockCircleOutlined style={{ fontSize: 48 }} />
           <Title level={2}>
             {currentTime.toLocaleTimeString()}
           </Title>
           <Text type="secondary">
-            {currentTime.toLocaleDateString('vi-VN', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
+            {currentTime.toLocaleDateString('vi-VN', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
             })}
           </Text>
         </div>
 
         <Space size="large" style={{ width: '100%', justifyContent: 'center' }}>
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             size="large"
             icon={<CheckCircleOutlined />}
             onClick={handleCheckIn}
@@ -132,8 +132,8 @@ const CheckInOut: React.FC = () => {
           >
             Check-in
           </Button>
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             size="large"
             danger
             icon={<CheckCircleOutlined />}

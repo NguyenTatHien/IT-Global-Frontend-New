@@ -327,6 +327,10 @@ interface IAttendanceResponse {
     earlyMinutes?: number;
     totalHours?: number;
     overtimeHours?: number;
+    location: {
+        latitude: number;
+        longitude: number;
+    }
     userShiftId: {
         _id: string;
         name: string;
