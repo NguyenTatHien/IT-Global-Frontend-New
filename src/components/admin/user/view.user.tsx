@@ -56,17 +56,17 @@ const ViewDetailUser = (props: IProps) => {
                     <Descriptions.Item label="Giới Tính">{dataInit?.gender}</Descriptions.Item>
                     <Descriptions.Item label="Tuổi">{dataInit?.age}</Descriptions.Item>
 
-                    <Descriptions.Item label="Loại nhân viên">
+                    {/* <Descriptions.Item label="Loại nhân viên">
                         <Badge 
                             status={getEmployeeTypeStatus(dataInit?.employeeType || '')} 
                             text={getEmployeeTypeText(dataInit?.employeeType || '')} 
                         />
-                    </Descriptions.Item>
+                    </Descriptions.Item> */}
                     <Descriptions.Item label="Vai trò">
                         <Badge status="processing" text={<>{dataInit?.role}</>} />
                     </Descriptions.Item>
 
-                    <Descriptions.Item label="Địa chỉ">{dataInit?.address}</Descriptions.Item>
+                    {/* <Descriptions.Item label="Địa chỉ">{dataInit?.address}</Descriptions.Item> */}
                     {/* <Descriptions.Item label="Thông tin công ty" span={2}>
                         Id: {dataInit?.company?._id ?? "-"}
                         <br />
@@ -87,7 +87,7 @@ const ViewDetailUser = (props: IProps) => {
                         <Button type="primary" onClick={() => { /* setIsOpenUpdate(true) */ }}>
                             Edit
                         </Button>
-                        <MailButton 
+                        <MailButton
                             recipientEmail={dataInit?.email}
                             recipientName={dataInit?.name}
                         />

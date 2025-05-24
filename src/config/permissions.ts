@@ -48,6 +48,18 @@ export const ALL_PERMISSIONS = {
         UPDATE: { method: "PATCH", apiPath: '/api/v1/payroll/:id', module: "PAYROLL" },
         DELETE: { method: "DELETE", apiPath: '/api/v1/payroll/:id', module: "PAYROLL" },
     },
+    DEPARTMENTS: {
+        GET_PAGINATE: { method: "GET", apiPath: '/api/v1/departments', module: "DEPARTMENTS" },
+        CREATE: { method: "POST", apiPath: '/api/v1/departments', module: "DEPARTMENTS" },
+        UPDATE: { method: "PATCH", apiPath: '/api/v1/departments/:id', module: "DEPARTMENTS" },
+        DELETE: { method: "DELETE", apiPath: '/api/v1/departments/:id', module: "DEPARTMENTS" },
+    },
+    COMPANIES: {
+        GET_PAGINATE: { method: "GET", apiPath: '/api/v1/companies', module: "COMPANIES" },
+        CREATE: { method: "POST", apiPath: '/api/v1/companies', module: "COMPANIES" },
+        UPDATE: { method: "PATCH", apiPath: '/api/v1/companies/:id', module: "COMPANIES" },
+        DELETE: { method: "DELETE", apiPath: '/api/v1/companies/:id', module: "COMPANIES" },
+    },
 }
 
 export const ALL_MODULES = {
@@ -61,5 +73,7 @@ export const ALL_MODULES = {
     USER_SHIFTS: 'USER_SHIFTS',
     REPORTS: 'REPORTS',
     LEAVE_REQUESTS: 'LEAVE_REQUESTS',
-    PAYROLL: 'PAYROLL'
+    PAYROLL: 'PAYROLL',
+    DEPARTMENTS: 'DEPARTMENTS',
+    COMPANIES: 'COMPANIES',
 }

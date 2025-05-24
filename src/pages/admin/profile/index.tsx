@@ -89,6 +89,7 @@ const ProfilePage = () => {
                             age: res.data.age,
                             gender: res.data.gender,
                             employeeType: res.data.employeeType,
+                            department: res.data.department?.name,
                             detail: addressObj.detail
                         });
                     }
@@ -322,6 +323,14 @@ const ProfilePage = () => {
                                             <Option value="contract">Hợp đồng</Option>
                                             <Option value="intern">Thực tập</Option>
                                         </Select>
+                                    </Form.Item>
+                                </Col>
+                                <Col xs={24} md={12}>
+                                    <Form.Item
+                                        name="department"
+                                        label="Phòng ban"
+                                    >
+                                        <Input type="string" disabled />
                                     </Form.Item>
                                 </Col>
                                 <Col xs={24} md={24}>

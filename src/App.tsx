@@ -30,6 +30,9 @@ import MyShifts from './components/admin/user-shifts/MyShifts';
 import Profile from './pages/admin/profile';
 import LeaveRequestPage from './pages/admin/leave-request';
 import PayrollPage from './pages/admin/payroll';
+import FacePythonTest from 'pages/auth/facepythontest';
+import CompanyPage from './pages/admin/company';
+import DepartmentPage from './pages/admin/department';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -166,10 +169,29 @@ export default function App() {
             <ProtectedRoute>
               <PayrollPage />
             </ProtectedRoute>
+        },
+        {
+          path: "company",
+          element: (
+            <ProtectedRoute>
+              <CompanyPage />
+            </ProtectedRoute>
+          )
+        },
+        {
+          path: "department",
+          element: (
+            <ProtectedRoute>
+              <DepartmentPage />
+            </ProtectedRoute>
+          )
         }
       ],
     },
-
+    {
+      path: "/face-id-test",
+      element: <FacePythonTest />,
+    },
 
     {
       path: "/login",

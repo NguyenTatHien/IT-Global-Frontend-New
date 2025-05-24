@@ -86,6 +86,10 @@ export interface IUser {
     createdAt?: string;
     updatedAt?: string;
     image?: string;
+    department?: {
+        _id: string,
+        name: string,
+    };
 }
 
 export interface IPermission {

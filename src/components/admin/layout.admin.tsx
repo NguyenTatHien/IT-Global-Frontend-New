@@ -15,7 +15,7 @@ import {
     BarChartOutlined,
     DollarOutlined,
 } from '@ant-design/icons';
-import { Layout, Menu, Dropdown, Space, message, Avatar, Button } from 'antd';
+import { Layout, Menu, Dropdown, Space, message, Avatar, Button, Drawer } from 'antd';
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Link } from 'react-router-dom';
 import { callLogout, callGetProfile } from 'config/api';
@@ -30,11 +30,10 @@ const { Content, Footer, Sider } = Layout;
 
 const LayoutAdmin = () => {
     const location = useLocation();
-
     const [collapsed, setCollapsed] = useState(false);
     const [activeMenu, setActiveMenu] = useState('');
+    const [drawerVisible, setDrawerVisible] = useState(false);
     const user = useAppSelector(state => state.account.user) as IAccount['user'];
-
     const permissions = useAppSelector(state => state.account.user.permissions);
     const [menuItems, setMenuItems] = useState<MenuProps['items']>([]);
 
@@ -82,6 +81,17 @@ const LayoutAdmin = () => {
                 item.apiPath === ALL_PERMISSIONS.PAYROLL.GET_PAGINATE.apiPath
                 && item.method === ALL_PERMISSIONS.PAYROLL.GET_PAGINATE.method
             )
+
+            const viewCompany = permissions.find(item =>
+                item.apiPath === ALL_PERMISSIONS.COMPANIES.GET_PAGINATE.apiPath
+                && item.method === ALL_PERMISSIONS.COMPANIES.GET_PAGINATE.method
+            )
+
+            const viewDepartment = permissions.find(item =>
+                item.apiPath === ALL_PERMISSIONS.DEPARTMENTS.GET_PAGINATE.apiPath
+                && item.method === ALL_PERMISSIONS.DEPARTMENTS.GET_PAGINATE.method
+            )
+
 
             const full = [
                 {
@@ -144,6 +154,16 @@ const LayoutAdmin = () => {
                     key: '/admin/reports',
                     icon: <BarChartOutlined />
                 }] : []),
+                ...(viewCompany ? [{
+                    label: <Link to='/admin/company'>Quản lý công ty</Link>,
+                    key: '/admin/company',
+                    icon: <AppstoreOutlined />
+                }] : []),
+                ...(viewDepartment ? [{
+                    label: <Link to='/admin/department'>Quản lý phòng ban</Link>,
+                    key: '/admin/department',
+                    icon: <TeamOutlined />
+                }] : []),
             ];
 
             setMenuItems(full);
@@ -183,18 +203,131 @@ const LayoutAdmin = () => {
         },
     ];
 
+    const renderMenu = () => (
+        <Menu
+            selectedKeys={[activeMenu]}
+            mode="inline"
+            items={menuItems}
+            onClick={(e) => {
+                setActiveMenu(e.key);
+                if (isMobile) {
+                    setDrawerVisible(false);
+                }
+            }}
+        />
+    );
+
     return (
-        <>
-            <Layout
-                style={{ minHeight: '100vh' }}
-                className="layout-admin"
-            >
-                {!isMobile ?
-                    <Sider
-                        theme='light'
-                        collapsible
-                        collapsed={collapsed}
-                        onCollapse={(value) => setCollapsed(value)}>
+        <Layout style={{ minHeight: '100vh' }} className="layout-admin">
+            {/* Desktop Sider */}
+            {!isMobile && (
+                <Sider
+                    theme='light'
+                    collapsible
+                    collapsed={collapsed}
+                    onCollapse={(value) => setCollapsed(value)}
+                >
+                    <div
+                        style={{
+                            margin: 16,
+                            textAlign: 'center',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            cursor: 'pointer'
+                        }}
+                        onClick={() => navigate('/admin')}
+                    >
+                        <img
+                            src={`${import.meta.env.VITE_BACKEND_URL}/images/company/logo.jpg`}
+                            alt="Company Logo"
+                            style={{
+                                height: collapsed ? '50px' : '90px',
+                                width: 'auto',
+                                transition: 'all 0.2s'
+                            }}
+                        />
+                    </div>
+                    {renderMenu()}
+                </Sider>
+            )}
+
+            <Layout>
+                {/* Header - Always visible */}
+                <div
+                    className='admin-header'
+                    style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        paddingRight: "20px",
+                        height: "64px",
+                        background: "#fff",
+                        boxShadow: "0 1px 4px rgba(0,21,41,.08)",
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 1000
+                    }}
+                >
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                        {isMobile && (
+                            <Button
+                                type="text"
+                                icon={drawerVisible ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                                onClick={() => setDrawerVisible(!drawerVisible)}
+                                style={{
+                                    fontSize: '16px',
+                                    width: 64,
+                                    height: 64,
+                                }}
+                            />
+                        )}
+                        {/* {isMobile && (
+                            <img
+                                src={`${import.meta.env.VITE_BACKEND_URL}/images/company/logo.jpg`}
+                                alt="Company Logo"
+                                style={{
+                                    height: '40px',
+                                    width: 'auto',
+                                    marginLeft: '10px'
+                                }}
+                                onClick={() => navigate('/admin')}
+                            />
+                        )} */}
+                        {!isMobile && (
+                            <Button
+                                type="text"
+                                icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                                onClick={() => setCollapsed(!collapsed)}
+                                style={{
+                                    fontSize: '16px',
+                                    width: 64,
+                                    height: 64,
+                                }}
+                            />
+                        )}
+                    </div>
+
+                    <Dropdown menu={{ items: itemsDropdown }} trigger={['click']}>
+                        <Space style={{ cursor: "pointer" }}>
+                            {user?.name}
+                            <Avatar
+                                src={user?.image ? `${import.meta.env.VITE_BACKEND_URL}/images/user/${user.image}` : null}
+                                icon={!user?.image && <UserOutlined />}
+                            />
+                        </Space>
+                    </Dropdown>
+                </div>
+
+                {/* Mobile Drawer */}
+                {isMobile && (
+                    <Drawer
+                        placement="left"
+                        onClose={() => setDrawerVisible(false)}
+                        open={drawerVisible}
+                        width={250}
+                        bodyStyle={{ padding: 0 }}
+                    >
                         <div
                             style={{
                                 margin: 16,
@@ -204,66 +337,29 @@ const LayoutAdmin = () => {
                                 alignItems: 'center',
                                 cursor: 'pointer'
                             }}
-                            onClick={() => navigate('/admin')}
+                            onClick={() => {
+                                navigate('/admin');
+                                setDrawerVisible(false);
+                            }}
                         >
                             <img
                                 src={`${import.meta.env.VITE_BACKEND_URL}/images/company/logo.jpg`}
                                 alt="Company Logo"
                                 style={{
-                                    height: collapsed ? '50px' : '90px',
+                                    height: '90px',
                                     width: 'auto',
-                                    transition: 'all 0.2s'
                                 }}
                             />
                         </div>
-                        <Menu
-                            selectedKeys={[activeMenu]}
-                            mode="inline"
-                            items={menuItems}
-                            onClick={(e) => setActiveMenu(e.key)}
-                        />
-                    </Sider>
-                    :
-                    <Menu
-                        selectedKeys={[activeMenu]}
-                        items={menuItems}
-                        onClick={(e) => setActiveMenu(e.key)}
-                        mode="horizontal"
-                    />
-                }
+                        {renderMenu()}
+                    </Drawer>
+                )}
 
-                <Layout>
-                    {!isMobile &&
-                        <div className='admin-header' style={{ display: "flex", justifyContent: "space-between", marginRight: 20 }}>
-                            <Button
-                                type="text"
-                                icon={collapsed ? React.createElement(MenuUnfoldOutlined) : React.createElement(MenuFoldOutlined)}
-                                onClick={() => setCollapsed(!collapsed)}
-                                style={{
-                                    fontSize: '16px',
-                                    width: 64,
-                                    height: 64,
-                                }}
-                            />
-
-                            <Dropdown menu={{ items: itemsDropdown }} trigger={['click']}>
-                                <Space style={{ cursor: "pointer" }}>
-                                    {user?.name}
-                                    <Avatar
-                                        src={user?.image ? `${import.meta.env.VITE_BACKEND_URL}/images/user/${user.image}` : null}
-                                        icon={!user?.image && <UserOutlined />}
-                                    >
-                                    </Avatar>
-                                </Space>
-                            </Dropdown>
-                        </div>
-                    }
-                    <Content style={{ padding: '15px' }}>
-                        <Outlet />
-                    </Content>
-                </Layout>
+                <Content style={{ padding: '15px' }}>
+                    <Outlet />
+                </Content>
             </Layout>
-        </>
+        </Layout>
     );
 };
 

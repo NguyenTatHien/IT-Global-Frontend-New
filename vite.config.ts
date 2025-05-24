@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react-swc'
 import path from 'path';
 import { visualizer } from "rollup-plugin-visualizer";
 import dns from 'dns';
+import fs from 'fs';
 
 //running on localhost instead of IP 127.0.0.1
 // https://vitejs.dev/config/server-options.html#server-host
@@ -20,7 +21,12 @@ export default defineConfig(({ command, mode }) => {
       // visualizer() as PluginOption
     ],
     server: {
-      port: parseInt(env.PORT)
+      host: "0.0.0.0",
+      port: parseInt(env.PORT),
+      https: {
+        key: fs.readFileSync(path.resolve(__dirname, './localhost+1-key.pem')),
+        cert: fs.readFileSync(path.resolve(__dirname, './localhost+1.pem')),
+      }
     },
     resolve: {
       alias: {

@@ -59,7 +59,7 @@ const AttendanceActions: React.FC = () => {
     const handleCheckIn = async () => {
         try {
             setLoading(true);
-            
+
             // Validate authentication
             if (!isAuthenticated || !user?._id) {
                 throw new Error('Vui lòng đăng nhập lại để tiếp tục');
@@ -68,22 +68,31 @@ const AttendanceActions: React.FC = () => {
             // Get current location
             let location;
             try {
-                const position = await getCurrentPosition();
-                location = {
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude
-                };
+                location = await getCurrentPosition();
+                console.log('Location data:', location); // Debug log
             } catch (error) {
-                message.warning('Không thể lấy vị trí của bạn. Hệ thống sẽ tiếp tục check-in mà không có thông tin vị trí.');
+                message.warning('Không thể lấy vị trí của bạn. Hệ thống sẽ sử dụng vị trí mặc định.');
+                location = {
+                    latitude: 0,
+                    longitude: 0
+                };
             }
-            
+
+            // Ensure location is always provided
+            if (!location || typeof location.latitude !== 'number' || typeof location.longitude !== 'number') {
+                throw new Error('Không thể xác định vị trí của bạn');
+            }
+
+            // Log the data being sent to the API
+            console.log('Sending to API:', { location });
+
             const response = await callCheckIn({ location });
             if (!response.data) {
                 throw new Error('Không nhận được dữ liệu từ server');
             }
             setTodayAttendance(response.data);
             message.success('Check-in thành công');
-            
+
         } catch (error: any) {
             let errorMessage = 'Check-in thất bại';
             if (typeof error === 'string') {
@@ -97,7 +106,7 @@ const AttendanceActions: React.FC = () => {
                 description: errorMessage,
                 duration: 5
             });
-            
+
             if (error.status === 401) {
                 navigate('/face-id-login');
             }
@@ -120,10 +129,10 @@ const AttendanceActions: React.FC = () => {
             }
             setTodayAttendance(response.data);
             message.success('Check-out thành công');
-            
+
         } catch (error: any) {
             console.error('Check-out error:', error);
-            
+
             let errorMessage = 'Check-out thất bại';
             if (typeof error === 'string') {
                 errorMessage = error;
@@ -136,7 +145,7 @@ const AttendanceActions: React.FC = () => {
                 description: errorMessage,
                 duration: 5
             });
-            
+
             if (error.status === 401) {
                 navigate('/face-id-login');
             }
@@ -145,18 +154,33 @@ const AttendanceActions: React.FC = () => {
         }
     };
 
-    const getCurrentPosition = (): Promise<GeolocationPosition> => {
+    const getCurrentPosition = (): Promise<{ latitude: number; longitude: number }> => {
         return new Promise((resolve, reject) => {
             if (!navigator.geolocation) {
                 reject(new Error('Trình duyệt không hỗ trợ định vị'));
                 return;
             }
 
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
-                enableHighAccuracy: true,
-                timeout: 5000,
-                maximumAge: 0
-            });
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    console.log('Raw position:', position); // Debug log
+                    const location = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    };
+                    console.log('Formatted location:', location); // Debug log
+                    resolve(location);
+                },
+                (error) => {
+                    console.error('Geolocation error:', error); // Debug log
+                    reject(error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                }
+            );
         });
     };
 

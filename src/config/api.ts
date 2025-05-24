@@ -87,15 +87,23 @@ export const callLoginWithFaceId = async (fileDescriptor: File) => {
             );
 
             // Check for specific error messages in response
-            if (response.data?.message?.includes('Invalid response format') ||
-                response.data?.message?.includes('không hợp lệ')) {
+            if (response.message?.includes('Invalid response format') ||
+                response.message?.includes('không hợp lệ')) {
                 throw new Error('Không thể xác thực khuôn mặt. Vui lòng thử lại với ánh sáng tốt hơn.');
             }
 
-            // Validate response structure
-            if (!response.data?.data?.access_token) {
-                throw new Error('Không thể xác thực. Vui lòng đảm bảo khuôn mặt rõ ràng và thử lại.');
+            if (response.message?.includes('Không tìm thấy khuôn mặt phù hợp')) {
+                throw new Error('Không tìm thấy khuôn mặt phù hợp trong hệ thống. Vui lòng đăng ký trước.');
             }
+
+            if (response.message?.includes('No face detected in the image')) {
+                throw new Error('Không phát hiện thấy khuôn mặt trong ảnh')
+            }
+
+            // Validate response structure
+            // if (!response.data?.data?.access_token) {
+            //     throw new Error('Không thể xác thực. Vui lòng đảm bảo khuôn mặt rõ ràng và thử lại.');
+            // }
 
             return response.data;
 
@@ -339,7 +347,7 @@ interface IAttendanceResponse {
     };
 }
 
-export const callCheckIn = (data: { location?: { latitude: number; longitude: number } }) => {
+export const callCheckIn = (data: { location: { latitude: number; longitude: number } }) => {
     return axios.post<IBackendRes<IAttendanceResponse>>('/api/v1/attendance/check-in', data);
 }
 
@@ -432,3 +440,35 @@ export const callGeneratePayroll = (data: {
 }) => {
     return axios.post<IBackendRes<any>>('/api/v1/payroll/generate', data);
 }
+
+export const callGetCompanies = (query: string = '') => {
+    return axios.get<IBackendRes<IModelPaginate<any>>>(`/api/v1/companies?${query}`);
+};
+
+export const callCreateCompany = (data: any) => {
+    return axios.post('/api/v1/companies', data);
+};
+
+export const callUpdateCompany = (id: string, data: any) => {
+    return axios.patch(`/api/v1/companies/${id}`, data);
+};
+
+export const callDeleteCompany = (id: string) => {
+    return axios.delete(`/api/v1/companies/${id}`);
+};
+
+export const callGetDepartments = (query: string = '') => {
+    return axios.get<IBackendRes<IModelPaginate<any>>>(`/api/v1/departments?${query}`);
+};
+
+export const callCreateDepartment = (data: any) => {
+    return axios.post('/api/v1/departments', data);
+};
+
+export const callUpdateDepartment = (id: string, data: any) => {
+    return axios.patch(`/api/v1/departments/${id}`, data);
+};
+
+export const callDeleteDepartment = (id: string) => {
+    return axios.delete(`/api/v1/departments/${id}`);
+};

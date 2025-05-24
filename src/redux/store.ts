@@ -7,13 +7,16 @@ import accountReducer from './slice/accountSlide';
 import userReducer from './slice/userSlide';
 import permissionReducer from './slice/permissionSlide';
 import roleReducer from './slice/roleSlide';
-
+import companyReducer from './slice/companySlide';
+import departmentReducer from './slice/departmentSlide';
 export const store = configureStore({
   reducer: {
     account: accountReducer,
     user: userReducer,
     permission: permissionReducer,
-    role: roleReducer
+    role: roleReducer,
+    company: companyReducer,
+    department: departmentReducer,
   },
 });
 

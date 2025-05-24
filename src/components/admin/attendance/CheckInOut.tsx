@@ -35,9 +35,16 @@ const CheckInOut: React.FC = () => {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude
         };
+      } else {
+        // fallback nếu không lấy được vị trí
+        location = {
+          latitude: 0,
+          longitude: 0
+        };
       }
 
-      const response = await callCheckIn(location as any);
+      // Đúng format cho backend
+      const response = await callCheckIn({ location });
       message.success('Check-in thành công!');
       await dispatch(fetchAccount());
     } catch (error: any) {

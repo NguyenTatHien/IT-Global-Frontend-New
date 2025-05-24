@@ -2,7 +2,7 @@ import { FooterToolbar, ModalForm, ProForm, ProFormDigit, ProFormSelect, ProForm
 import { Col, Form, Row, Upload, Button, message, notification, Modal, ConfigProvider, Progress, Space } from "antd";
 import { isMobile } from "react-device-detect";
 import { useState, useEffect, useRef } from "react";
-import { callCreateUser, callFetchRole, callScanFace, callUpdateUser, callUploadSingleFile } from "@/config/api";
+import { callCreateUser, callFetchRole, callScanFace, callUpdateUser, callUploadSingleFile, callGetDepartments } from "@/config/api";
 import { IUser } from "@/types/backend";
 import { DebounceSelect } from "./debouce.select";
 import Webcam from "react-webcam";
@@ -53,6 +53,7 @@ const ModalUser = (props: IProps) => {
     const [cameraError, setCameraError] = useState<string | null>(null);
     const webcamRef = useRef<Webcam>(null);
     const [form] = Form.useForm();
+    const [departments, setDepartments] = useState<{ label: string; value: string }[]>([]);
 
     useEffect(() => {
         if (dataInit?._id) {
@@ -77,6 +78,19 @@ const ModalUser = (props: IProps) => {
                 form.setFieldsValue({ role: { label: dataInit.role.name, value: dataInit.role._id } });
             }
         }
+        // Fetch departments
+        async function fetchDepartments() {
+            const res = await callGetDepartments("current=1&pageSize=100");
+            if (res?.data?.result) {
+                setDepartments(res.data.result
+                    .filter(item => item.isActive === true)
+                    .map((dep: any) => ({
+                        label: dep.name,
+                        value: dep._id
+                    })));
+            }
+        }
+        fetchDepartments();
     }, [dataInit, form]);
 
     const processImage = async (file: File) => {
@@ -151,10 +165,7 @@ const ModalUser = (props: IProps) => {
             // Add delay for camera focus
             await new Promise(resolve => setTimeout(resolve, 500));
 
-            const imageSrc = webcamRef.current.getScreenshot({
-                width: CAPTURE_WIDTH,
-                height: CAPTURE_HEIGHT
-            });
+            const imageSrc = webcamRef.current.getScreenshot();
             if (!imageSrc) {
                 throw new Error("Không thể chụp ảnh. Vui lòng thử lại.");
             }
@@ -185,7 +196,7 @@ const ModalUser = (props: IProps) => {
             return;
         }
 
-        const { name, email, password, age, gender, role, employeeType, city, district, ward, detail } = valuesForm;
+        const { name, email, password, age, gender, role, employeeType, city, district, ward, detail, department, faceDescriptor } = valuesForm;
         const file = dataFaceImage[0]?.originFileObj;
 
         // Tạo object address từ các trường địa chỉ
@@ -205,6 +216,8 @@ const ModalUser = (props: IProps) => {
             address: JSON.stringify(address).replace(/\\"/g, '"'),
             role: role?.value || dataInit?.role?._id,
             employeeType,
+            faceDescriptor,
+            department: department || undefined,
         };
 
         // Only include image and faceDescriptor if they have been changed
@@ -456,6 +469,15 @@ const ModalUser = (props: IProps) => {
                             rules={[{ required: true, message: "Vui lòng chọn loại nhân viên!" }]}
                         />
                     </Col>
+                    <Col lg={6} md={6} sm={24} xs={24}>
+                        <ProFormSelect
+                            name="department"
+                            label="Phòng ban"
+                            placeholder="Chọn phòng ban"
+                            options={departments}
+                            rules={[{ required: true, message: "Vui lòng chọn phòng ban!" }]}
+                        />
+                    </Col>
 
                     <AddressForm
                         form={form}
@@ -564,7 +586,7 @@ const ModalUser = (props: IProps) => {
                                 onUserMediaError={handleCameraError}
                                 style={{ width: '100%', borderRadius: '8px' }}
                             />
-                            <div
+                            {/* <div
                                 style={{
                                     position: 'absolute',
                                     top: '50%',
@@ -576,7 +598,7 @@ const ModalUser = (props: IProps) => {
                                     borderRadius: '50%',
                                     boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.3)',
                                 }}
-                            />
+                            /> */}
                         </div>
                         <div style={{ marginTop: '10px', textAlign: 'center' }}>
                             <Space direction="vertical">
