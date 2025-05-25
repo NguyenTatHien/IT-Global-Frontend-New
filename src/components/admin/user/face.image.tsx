@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { callGetMyFace } from "@/config/api";
+import { Image } from "antd";
+import styles from "styles/profile.module.scss"
 
 interface FaceImageProps {
     userId: string | any;
     width?: string | number;
     height?: string | number;
+    preview?: boolean
 }
 
-const FaceImage = ({ userId, width, height }: FaceImageProps) => {
+const FaceImage = ({ userId, width, height, preview }: FaceImageProps) => {
     const [imgUrl, setImgUrl] = useState<string>("");
 
     useEffect(() => {
@@ -33,7 +36,7 @@ const FaceImage = ({ userId, width, height }: FaceImageProps) => {
     if (!imgUrl) return <span>Đang tải ảnh...</span>;
 
     return (
-        <img
+        <Image
             src={imgUrl}
             alt="Face"
             style={{
@@ -42,6 +45,7 @@ const FaceImage = ({ userId, width, height }: FaceImageProps) => {
                 objectFit: "cover",
                 borderRadius: "8px",
             }}
+            preview={preview}
         />
     );
 };

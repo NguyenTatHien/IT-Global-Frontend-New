@@ -8,7 +8,7 @@ import { DebounceSelect } from "./debouce.select";
 import Webcam from "react-webcam";
 import { CameraOutlined, SaveOutlined, CloseOutlined, PlusOutlined, RetweetOutlined, UserAddOutlined } from "@ant-design/icons";
 import { v4 as uuidv4 } from "uuid";
-import enUS from 'antd/lib/locale/en_US';
+import vn from 'antd/lib/locale/vi_VN'
 import AddressForm, { IAddress } from '@/components/AddressForm';
 import FaceImage from "./face.image";
 
@@ -517,7 +517,7 @@ const ModalUser = (props: IProps) => {
                             help="Vui lòng giữ khuôn mặt tự nhiên, nhìn thẳng vào camera"
                         >
                             <Space direction="vertical" style={{ width: '100%' }}>
-                                <ConfigProvider locale={enUS}>
+                                <ConfigProvider locale={vn}>
                                     <Upload
                                         listType="picture-card"
                                         maxCount={1}

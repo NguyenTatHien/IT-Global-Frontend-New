@@ -313,7 +313,7 @@ const LayoutAdmin = () => {
                         <Space style={{ cursor: "pointer" }}>
                             {user?.name}
                             <Avatar
-                                src={user?.image ? <FaceImage userId={user._id} width="32px" height="32px" /> : null}
+                                src={user?.image ? <FaceImage userId={user._id} width="32px" height="32px" preview={false} /> : null}
                                 icon={!user?.image && <UserOutlined />}
                             />
                         </Space>

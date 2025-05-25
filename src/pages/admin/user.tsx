@@ -4,7 +4,7 @@ import { fetchUser } from "@/redux/slice/userSlide";
 import { IUser } from "@/types/backend";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { ActionType, ProColumns } from '@ant-design/pro-components';
-import { Button, Popconfirm, Space, message, notification } from "antd";
+import { Button, ConfigProvider, Popconfirm, Space, Upload, message, notification } from "antd";
 import { useState, useRef } from 'react';
 import dayjs from 'dayjs';
 import { callDeleteUser, callGetMyFace } from "@/config/api";
@@ -80,7 +80,7 @@ const UserPage = () => {
             dataIndex: 'image',
             render: (text, record) => {
                 return record._id ? (
-                    <FaceImage userId={record?._id} width="100px" />
+                    <FaceImage userId={record?._id} width="80px" height="80px" />
                 ) : (
                     <span>Không có ảnh</span>
                 );

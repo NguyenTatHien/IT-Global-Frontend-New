@@ -1,16 +1,31 @@
 // react-for-nest/src/components/attendance/CheckInOut.tsx
-import React, { useState } from 'react';
-import { Button, Card, message, Space, Typography, notification } from 'antd';
-import { ClockCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import React, { useEffect, useRef, useState } from 'react';
+import { Button, Card, message, Space, Typography, notification, Modal, Alert, Spin, Progress } from 'antd';
+import { ClockCircleOutlined, CheckCircleOutlined, AlignCenterOutlined } from '@ant-design/icons';
 import { useAppDispatch } from '@/redux/hooks';
 import { fetchAccount } from '@//redux/slice/accountSlide';
 import { callCheckIn, callCheckOut } from '@/config/api';
+import Webcam from 'react-webcam';
+import * as faceapi from 'face-api.js';
+import styles from "styles/faceIdLogin.module.scss";
 
 const { Title, Text } = Typography;
+
+const OPTIMAL_WIDTH = 470; // Giảm kích thước xuống
+const OPTIMAL_HEIGHT = 410;
 
 const CheckInOut: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const webcamRef = useRef<Webcam>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [processingProgress, setProcessingProgress] = useState(0);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [modelsLoaded, setModelsLoaded] = useState(false);
+  const [faceDetected, setFaceDetected] = useState(false);
+
+
   const dispatch = useAppDispatch();
 
   // Cập nhật thời gian mỗi giây
@@ -21,6 +36,38 @@ const CheckInOut: React.FC = () => {
 
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        const MODEL_URL = '/models';
+        // Chỉ load model cần thiết
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        setModelsLoaded(true);
+      } catch (error) {
+        console.error('Error loading models:', error);
+        setCameraError('Không thể tải mô hình nhận diện. Vui lòng thử lại.');
+      }
+    };
+    loadModels();
+  }, []);
+
+  const showModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleOk = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleCameraError = (error: string | DOMException) => {
+    console.error('Camera error:', error);
+    setCameraError('Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập và thử lại.');
+  };
 
   const handleCheckIn = async () => {
     try {
@@ -134,11 +181,87 @@ const CheckInOut: React.FC = () => {
             type="primary"
             size="large"
             icon={<CheckCircleOutlined />}
-            onClick={handleCheckIn}
+            onClick={showModal}
             loading={loading}
           >
             Check-in
           </Button>
+          <Modal
+            title="Chấm công bằng faceid"
+            // closable={{ 'aria-label': 'Custom Close Button' }}
+            open={isModalOpen}
+            onOk={handleOk}
+            onCancel={handleCancel}
+          >
+            {cameraError ? (
+              <Alert
+                message="Lỗi Camera"
+                description={cameraError}
+                type="error"
+                showIcon
+                className={styles.errorAlert}
+                action={
+                  <Button type="primary" onClick={() => window.location.reload()}>
+                    Thử lại
+                  </Button>
+                }
+              />
+            ) : (
+              <>
+                <div className={styles.webcamContainer}>
+                  {/* <div className={styles.faceGuide}>
+                                        <div className={styles.faceGuideInner}></div>
+                                    </div> */}
+                  <Webcam
+                    audio={false}
+                    ref={webcamRef}
+                    screenshotFormat="image/jpeg"
+                    className={styles.webcam}
+                    videoConstraints={{
+                      width: OPTIMAL_WIDTH,
+                      height: OPTIMAL_HEIGHT,
+                      facingMode: "user",
+                      aspectRatio: 4 / 3
+                    }}
+                    onUserMediaError={handleCameraError}
+                  />
+                  {loading && (
+                    <div className={styles.processingOverlay}>
+                      <Spin size="large" />
+                      <Progress
+                        type="circle"
+                        percent={processingProgress}
+                        width={80}
+                        status={processingProgress === 100 ? "success" : "active"}
+                        strokeColor={{
+                          '0%': '#108ee9',
+                          '100%': '#87d068',
+                        }}
+                      />
+                      <Text>Đang xử lý...</Text>
+                    </div>
+                  )}
+                  {faceDetected && !loading && (
+                    <div className={styles.faceDetectedOverlay}>
+                      <Text>Đã phát hiện khuôn mặt, đang đăng nhập...</Text>
+                    </div>
+                  )}
+                </div>
+
+                {error && (
+                  <Alert
+                    message="Lỗi"
+                    description={error}
+                    type="error"
+                    showIcon
+                    className={styles.errorAlert}
+                    closable
+                    onClose={() => setError(null)}
+                  />
+                )}
+              </>
+            )}
+          </Modal>
           <Button
             type="primary"
             size="large"
