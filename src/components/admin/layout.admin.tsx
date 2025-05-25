@@ -25,6 +25,7 @@ import type { MenuProps } from 'antd';
 import { setLogoutAction } from '@/redux/slice/accountSlide';
 import { ALL_PERMISSIONS } from '@/config/permissions';
 import { IAccount } from '@/types/backend';
+import FaceImage from './user/face.image';
 
 const { Content, Footer, Sider } = Layout;
 
@@ -120,8 +121,8 @@ const LayoutAdmin = () => {
                     icon: <ClockCircleOutlined />
                 },
                 {
-                    label: <Link to='/admin/attendance-history'>Lịch sử chấm công</Link>,
-                    key: '/admin/attendance-history',
+                    label: <Link to='/admin/my-attendance-history'>Chấm công của tôi</Link>,
+                    key: '/admin/my-attendance-history',
                     icon: <HistoryOutlined />
                 },
                 ...(viewShifts ? [{
@@ -312,7 +313,7 @@ const LayoutAdmin = () => {
                         <Space style={{ cursor: "pointer" }}>
                             {user?.name}
                             <Avatar
-                                src={user?.image ? `${import.meta.env.VITE_BACKEND_URL}/images/user/${user.image}` : null}
+                                src={user?.image ? <FaceImage userId={user._id} width="32px" height="32px" /> : null}
                                 icon={!user?.image && <UserOutlined />}
                             />
                         </Space>

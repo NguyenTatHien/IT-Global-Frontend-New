@@ -4,6 +4,7 @@ import { UserOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-de
 import { useAppSelector } from '@/redux/hooks';
 import { IUser } from '@/types/backend';
 import { callUpdateUser, callGetProfile } from '@/config/api';
+import FaceImage from '@/components/admin/user/face.image';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -215,11 +216,11 @@ const ProfilePage = () => {
                         <div style={{ textAlign: 'center' }}>
                             <Avatar
                                 size={200}
-                                src={userData?.image ? `${import.meta.env.VITE_BACKEND_URL}/images/user/${userData.image}` : null}
+                                src={userData?.image ? <FaceImage userId={userData._id} width="200px" height="200px" /> : null}
                                 icon={!userData?.image && <UserOutlined />}
                                 style={{
                                     border: '4px solid #fff',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                                 }}
                             />
                             <Title level={3} style={{ marginTop: '16px', marginBottom: '4px' }}>

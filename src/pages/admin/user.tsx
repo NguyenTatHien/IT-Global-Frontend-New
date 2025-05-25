@@ -7,13 +7,14 @@ import { ActionType, ProColumns } from '@ant-design/pro-components';
 import { Button, Popconfirm, Space, message, notification } from "antd";
 import { useState, useRef } from 'react';
 import dayjs from 'dayjs';
-import { callDeleteUser } from "@/config/api";
+import { callDeleteUser, callGetMyFace } from "@/config/api";
 import queryString from 'query-string';
 import ModalUser from "@/components/admin/user/modal.user";
 import ViewDetailUser from "@/components/admin/user/view.user";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 import 'dayjs/locale/vi';
+import FaceImage from "@/components/admin/user/face.image";
 dayjs.locale('vi');
 
 const UserPage = () => {
@@ -78,12 +79,8 @@ const UserPage = () => {
             title: 'Ảnh khuôn mặt', // Changed from 'FaceId'
             dataIndex: 'image',
             render: (text, record) => {
-                return record.image ? (
-                    <img
-                        src={`${import.meta.env.VITE_BACKEND_URL}/images/user/${record.image}`}
-                        alt="User Image"
-                        style={{ width: "100px", height: "auto", objectFit: "cover", borderRadius: "8px" }}
-                    />
+                return record._id ? (
+                    <FaceImage userId={record?._id} width="100px" />
                 ) : (
                     <span>Không có ảnh</span>
                 );

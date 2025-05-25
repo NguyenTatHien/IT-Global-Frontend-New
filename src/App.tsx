@@ -21,7 +21,6 @@ import LayoutApp from './components/share/layout.app';
 import FaceIdLogin from './pages/auth/faceIdLogin';
 import FaceIdRegister from './pages/auth/faceIdRegister';
 import CheckInOut from './components/admin/attendance/CheckInOut';
-import AttendanceHistory from './components/admin/attendance/AttendanceHistory';
 import Shifts from './components/admin/shifts/Shifts';
 import UserShifts from './components/admin/user-shifts/UserShifts';
 import { ConfigProvider } from 'antd';
@@ -33,6 +32,7 @@ import PayrollPage from './pages/admin/payroll';
 import FacePythonTest from 'pages/auth/facepythontest';
 import CompanyPage from './pages/admin/company';
 import DepartmentPage from './pages/admin/department';
+import MyAttendanceHistory from './components/admin/attendance/MyAttendanceHistory';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -122,10 +122,10 @@ export default function App() {
             </ProtectedRoute>
         },
         {
-          path: "attendance-history",
+          path: "my-attendance-history",
           element:
             <ProtectedRoute>
-              <AttendanceHistory />
+              <MyAttendanceHistory />
             </ProtectedRoute>
         },
         {

@@ -2,7 +2,7 @@ import { FooterToolbar, ModalForm, ProForm, ProFormDigit, ProFormSelect, ProForm
 import { Col, Form, Row, Upload, Button, message, notification, Modal, ConfigProvider, Progress, Space } from "antd";
 import { isMobile } from "react-device-detect";
 import { useState, useEffect, useRef } from "react";
-import { callCreateUser, callFetchRole, callScanFace, callUpdateUser, callUploadSingleFile, callGetDepartments } from "@/config/api";
+import { callCreateUser, callFetchRole, callScanFace, callUpdateUser, callUploadSingleFile, callGetDepartments, callGetMyFace } from "@/config/api";
 import { IUser } from "@/types/backend";
 import { DebounceSelect } from "./debouce.select";
 import Webcam from "react-webcam";
@@ -10,6 +10,7 @@ import { CameraOutlined, SaveOutlined, CloseOutlined, PlusOutlined, RetweetOutli
 import { v4 as uuidv4 } from "uuid";
 import enUS from 'antd/lib/locale/en_US';
 import AddressForm, { IAddress } from '@/components/AddressForm';
+import FaceImage from "./face.image";
 
 // Constants for image capture
 const CAPTURE_WIDTH = 640;
@@ -57,16 +58,37 @@ const ModalUser = (props: IProps) => {
 
     useEffect(() => {
         if (dataInit?._id) {
+            // Nếu có image thì gọi API lấy ảnh
             if (dataInit.image) {
-                setDataFaceImage([
-                    {
-                        uid: uuidv4(),
-                        name: dataInit.image,
-                        status: "done",
-                        url: `${import.meta.env.VITE_BACKEND_URL}/images/user/${dataInit.image}`,
-                    },
-                ]);
+                const fetchFaceImage = async () => {
+                    try {
+                        const res = await callGetMyFace(dataInit._id as any); // Gọi API lấy ảnh blob
+                        const imageUrl = URL.createObjectURL(res); // Tạo URL từ blob
+                        setDataFaceImage([
+                            {
+                                uid: uuidv4(),
+                                name: dataInit.image,
+                                status: "done",
+                                url: imageUrl,
+                            },
+                        ]);
+                    } catch (error) {
+                        console.error("Lỗi tải ảnh khuôn mặt:", error);
+                        // fallback set url rỗng nếu cần
+                        setDataFaceImage([
+                            {
+                                uid: uuidv4(),
+                                name: dataInit.image,
+                                status: "done",
+                                url: "",
+                            },
+                        ]);
+                    }
+                };
+                fetchFaceImage();
             }
+
+            // Xử lý role
             if (dataInit.role) {
                 setRoles([
                     {
@@ -78,20 +100,24 @@ const ModalUser = (props: IProps) => {
                 form.setFieldsValue({ role: { label: dataInit.role.name, value: dataInit.role._id } });
             }
         }
+
         // Fetch departments
         async function fetchDepartments() {
             const res = await callGetDepartments("current=1&pageSize=100");
             if (res?.data?.result) {
-                setDepartments(res.data.result
-                    .filter(item => item.isActive === true)
-                    .map((dep: any) => ({
-                        label: dep.name,
-                        value: dep._id
-                    })));
+                setDepartments(
+                    res.data.result
+                        .filter((item) => item.isActive === true)
+                        .map((dep: any) => ({
+                            label: dep.name,
+                            value: dep._id,
+                        }))
+                );
             }
         }
         fetchDepartments();
     }, [dataInit, form]);
+
 
     const processImage = async (file: File) => {
         setLoading(true);
@@ -122,7 +148,7 @@ const ModalUser = (props: IProps) => {
                 name: fileName,
                 uid: uuidv4(),
                 status: "done",
-                url: `${import.meta.env.VITE_BACKEND_URL}/images/user/${fileName}`,
+                url: "",
                 originFileObj: file,
             }]);
             setFaceDescriptor(scanRes.data);

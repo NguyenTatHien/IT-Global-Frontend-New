@@ -228,6 +228,11 @@ export const callFetchUser = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<IUser>>>(`/api/v1/users?${query}`)
 }
 
+export const callGetMyFace = async (id: string) => {
+    const res = await axios.get(`/api/v1/users/faces/${id}`, { responseType: 'blob' })
+    return res;
+}
+
 export const callCreatePermission = (permission: IPermission) => {
     return axios.post<IBackendRes<IPermission>>('/api/v1/permissions', permission)
 }

@@ -50,7 +50,7 @@ interface IState {
     sortOrder: 'ascend' | 'descend';
 }
 
-const AttendanceHistory: FC = () => {
+const MyAttendanceHistory: FC = () => {
     const [dateRange, setDateRange] = useState<RangePickerProps['value']>(() => {
         const today = dayjs();
         const monday = today.startOf('week').add(1, 'day');
@@ -139,8 +139,8 @@ const AttendanceHistory: FC = () => {
 
     useEffect(() => {
         if (isAuthenticated && dateRange?.[0] && dateRange?.[1]) {
-            fetchData({ 
-                page: 1, 
+            fetchData({
+                page: 1,
                 limit: 10,
                 startDate: dateRange[0].format('YYYY-MM-DD'),
                 endDate: dateRange[1].format('YYYY-MM-DD')
@@ -159,7 +159,7 @@ const AttendanceHistory: FC = () => {
             // Handle multiple sorters if needed
             return;
         }
-        
+
         const params = {
             page: pagination.current,
             limit: pagination.pageSize,
@@ -168,7 +168,7 @@ const AttendanceHistory: FC = () => {
             startDate: dateRange?.[0]?.format('YYYY-MM-DD'),
             endDate: dateRange?.[1]?.format('YYYY-MM-DD')
         };
-        
+
         fetchData(params);
     };
 
@@ -209,10 +209,10 @@ const AttendanceHistory: FC = () => {
 
     const formatTimeDisplay = (minutes: number): string => {
         if (!minutes || minutes <= 0) return '-';
-        
+
         const hours = Math.floor(minutes / 60);
         const remainingMinutes = minutes % 60;
-        
+
         if (hours > 0) {
             if (remainingMinutes > 0) {
                 return `${hours} giờ ${remainingMinutes} phút`;
@@ -224,13 +224,13 @@ const AttendanceHistory: FC = () => {
 
     const formatWorkHours = (hours: string | number): string => {
         if (!hours) return '-';
-        
+
         const totalHours = typeof hours === 'string' ? parseFloat(hours) : hours;
         if (totalHours <= 0) return '-';
-        
+
         const wholeHours = Math.floor(totalHours);
         const minutes = Math.round((totalHours - wholeHours) * 60);
-        
+
         if (wholeHours > 0) {
             if (minutes > 0) {
                 return `${wholeHours} giờ ${minutes} phút`;
@@ -278,7 +278,7 @@ const AttendanceHistory: FC = () => {
                 const shiftName = userShift.name || userShift.shiftId?.name || 'Ca làm việc';
                 const startTime = userShift.startTime || userShift.shiftId?.startTime || '';
                 const endTime = userShift.endTime || userShift.shiftId?.endTime || '';
-                
+
                 const formatTime = (timeStr: string) => {
                     if (!timeStr) return '';
                     // Nếu timeStr đã là định dạng "HH:mm" thì trả về luôn
@@ -292,7 +292,7 @@ const AttendanceHistory: FC = () => {
 
                 const formattedStartTime = formatTime(startTime);
                 const formattedEndTime = formatTime(endTime);
-                
+
                 return (
                     <Text>
                         {shiftName}
@@ -397,4 +397,4 @@ const AttendanceHistory: FC = () => {
     );
 };
 
-export default AttendanceHistory;
+export default MyAttendanceHistory;
