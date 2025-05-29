@@ -18,7 +18,6 @@ const ViewDetailPermission = (props: IProps) => {
                 placement="right"
                 onClose={() => { onClose(false); setDataInit(null) }}
                 open={open}
-                width={"40vw"}
                 maskClosable={false}
             >
                 <Descriptions title="" bordered column={2} layout="vertical">

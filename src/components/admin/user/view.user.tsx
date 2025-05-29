@@ -46,7 +46,6 @@ const ViewDetailUser = (props: IProps) => {
                 placement="right"
                 onClose={() => { onClose(false); setDataInit(null) }}
                 open={open}
-                width={"40vw"}
                 maskClosable={false}
             >
                 <Descriptions title="" bordered column={2} layout="vertical">
@@ -56,14 +55,14 @@ const ViewDetailUser = (props: IProps) => {
                     <Descriptions.Item label="Giới Tính">{dataInit?.gender}</Descriptions.Item>
                     <Descriptions.Item label="Tuổi">{dataInit?.age}</Descriptions.Item>
 
-                    {/* <Descriptions.Item label="Loại nhân viên">
-                        <Badge 
-                            status={getEmployeeTypeStatus(dataInit?.employeeType || '')} 
-                            text={getEmployeeTypeText(dataInit?.employeeType || '')} 
+                    <Descriptions.Item label="Loại nhân viên">
+                        <Badge
+                            status={getEmployeeTypeStatus(dataInit?.employeeType || '')}
+                            text={getEmployeeTypeText(dataInit?.employeeType || '')}
                         />
-                    </Descriptions.Item> */}
+                    </Descriptions.Item>
                     <Descriptions.Item label="Vai trò">
-                        <Badge status="processing" text={<>{dataInit?.role}</>} />
+                        <Badge status="processing" text={dataInit?.role && typeof dataInit.role === 'object' ? dataInit.role.name : ''} />
                     </Descriptions.Item>
 
                     {/* <Descriptions.Item label="Địa chỉ">{dataInit?.address}</Descriptions.Item> */}
@@ -81,18 +80,6 @@ const ViewDetailUser = (props: IProps) => {
                         {dataInit && dataInit.updatedAt ? dayjs(dataInit.updatedAt).format('DD-MM-YYYY HH:mm:ss') : ""}
                     </Descriptions.Item>
                 </Descriptions>
-
-                <div style={{ marginTop: '24px' }}>
-                    <Space>
-                        <Button type="primary" onClick={() => { /* setIsOpenUpdate(true) */ }}>
-                            Edit
-                        </Button>
-                        <MailButton
-                            recipientEmail={dataInit?.email}
-                            recipientName={dataInit?.name}
-                        />
-                    </Space>
-                </div>
             </Drawer>
         </>
     )

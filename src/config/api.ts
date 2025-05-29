@@ -1,6 +1,7 @@
 import { IBackendRes, IAccount, IUser, IModelPaginate, IGetAccount, IPermission, IRole, IAttendanceData } from '@/types/backend';
 import axios from 'config/axios-customize';
 import axiosClient from 'config/axios-customize';
+import queryString from 'query-string';
 
 /**
  * 
@@ -100,6 +101,10 @@ export const callLoginWithFaceId = async (fileDescriptor: File) => {
                 throw new Error('Không phát hiện thấy khuôn mặt trong ảnh')
             }
 
+            if (response.message?.includes('Phát hiện khuôn mặt giả')) {
+                throw new Error('Phát hiện khuôn mặt giả. Vui lòng đảm bảo khuôn mặt thật và thử lại.');
+            }
+
             // Validate response structure
             // if (!response.data?.data?.access_token) {
             //     throw new Error('Không thể xác thực. Vui lòng đảm bảo khuôn mặt rõ ràng và thử lại.');
@@ -139,11 +144,12 @@ export const callLoginWithFaceId = async (fileDescriptor: File) => {
 };
 
 export const callScanFace = async (formData: FormData) => {
-    return axios.post('/api/v1/face-recognition/scan', formData, {
+    const response = await axios.post('/api/v1/face-recognition/scan', formData, {
         headers: {
             'Content-Type': 'multipart/form-data',
         },
     });
+    return response;
 };
 
 export const callFetchAccount = () => {
@@ -188,6 +194,7 @@ export const callCreateUser = (user: IUser, file: File) => {
     formData.append("gender", user.gender);
     formData.append("address", user.address);
     formData.append("role", user.role as any);
+    formData.append("department", user.department as any);
     formData.append("employeeType", user.employeeType || "");
     formData.append("image", file);
 
@@ -352,20 +359,48 @@ interface IAttendanceResponse {
     };
 }
 
-export const callCheckIn = (data: { location: { latitude: number; longitude: number } }) => {
-    return axios.post<IBackendRes<IAttendanceResponse>>('/api/v1/attendance/check-in', data);
-}
+export const callCheckIn = async (data: { location: { latitude: number; longitude: number } }, file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('location', JSON.stringify(data.location));
+    return await axios.post<IBackendRes<IAttendanceResponse>>('/api/v1/attendance/check-in', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+};
 
-export const callCheckOut = () => {
-    return axios.post<IBackendRes<IAttendanceResponse>>('/api/v1/attendance/check-out');
-}
+export const callCheckOut = (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return axios.post('/api/v1/attendance/check-out', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+};
+
+export const callGetAllAttendance = (query: { current: number; pageSize: number; startDate: string; endDate: string; search?: string }) => {
+    return axios.get<IBackendRes<IModelPaginate<IAttendanceData>>>(`/api/v1/attendance/all-attendance?${query}`);
+};
+
+export const callGetMyAttendance = (query: { current: number; pageSize: number; startDate: string; endDate: string; sort?: string }) => {
+    const qs = queryString.stringify(query);
+    return axios.get<IBackendRes<IAttendanceData>>(`/api/v1/attendance/my-attendance?${qs}`);
+};
 
 export const callGetTodayAttendance = () => {
     return axios.get<IBackendRes<IAttendanceResponse>>('/api/v1/attendance/today');
 }
 
-export const callGetMyAttendance = (query: string) => {
-    return axios.get<IBackendRes<IAttendanceData>>(`/api/v1/attendance/my-attendance?${query}`)
+export const callGetCheckInImage = async (id: string) => {
+    const res = await axios.get(`/api/v1/attendance/check-in-image/${id}`, { responseType: 'blob' })
+    return res;
+}
+
+export const callGetCheckOutImage = async (id: string) => {
+    const res = await axios.get(`/api/v1/attendance/check-out-image/${id}`, { responseType: 'blob' })
+    return res;
 }
 
 export const callGetProfile = () => {
@@ -477,3 +512,4 @@ export const callUpdateDepartment = (id: string, data: any) => {
 export const callDeleteDepartment = (id: string) => {
     return axios.delete(`/api/v1/departments/${id}`);
 };
+

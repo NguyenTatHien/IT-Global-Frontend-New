@@ -18,8 +18,11 @@ export const ALL_PERMISSIONS = {
         DELETE: { method: "DELETE", apiPath: '/api/v1/users/:id', module: "USERS" },
     },
     ATTENDANCE: {
+        GET_PAGINATE: { method: "GET", apiPath: '/api/v1/attendance/all-attendance', module: "ATTENDANCE" },
         CHECK_IN: { method: "POST", apiPath: '/api/v1/attendance/check-in', module: "ATTENDANCE" },
         CHECK_OUT: { method: "POST", apiPath: '/api/v1/attendance/check-out', module: "ATTENDANCE" },
+        GET_TODAY: { method: "GET", apiPath: '/api/v1/attendance/today', module: "ATTENDANCE" },
+        GET_MY_ATTENDANCE: { method: "GET", apiPath: '/api/v1/attendance/my-attendance', module: "ATTENDANCE" },
     },
     SHIFTS: {
         GET_PAGINATE: { method: "GET", apiPath: '/api/v1/shifts', module: "SHIFTS" },

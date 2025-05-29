@@ -1,195 +1,210 @@
-import React, { FC, useState, useEffect } from 'react';
-import { Table, DatePicker, Space, Tag, Typography, message } from 'antd';
-import type { TablePaginationConfig } from 'antd/es/table';
-import type { RangePickerProps } from 'antd/es/date-picker';
-import type { FilterValue, SorterResult, TableCurrentDataSource } from 'antd/es/table/interface';
+import React, { useState, useRef } from 'react';
+import { DatePicker, Space, Tag, Typography, Card } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
+import { ProTable } from '@ant-design/pro-components';
+import type { ActionType, ProColumns, RequestData } from '@ant-design/pro-components';
 import { callGetMyAttendance } from '@/config/api';
-import { useAppSelector } from '@/redux/hooks';
-import { useNavigate } from 'react-router-dom';
-import queryString from 'query-string';
-// import { getAttendanceHistory } from '@/components/admin/attendance/attendance.service';
+import ViewDetailAttendance from './ViewDetailAttendance';
 
 const { RangePicker } = DatePicker;
 const { Text } = Typography;
 
-interface IShift {
-    _id: string;
-    name: string;
-    startTime: string;
-    endTime: string;
-}
-
-interface IUserShift {
-    _id: string;
-    name: string;
-    startTime: string;
-    endTime: string;
-    shiftId: IShift | null;
-}
-
 interface IAttendance {
     _id: string;
-    userId: string;
-    date: string;
+    userId: {
+        _id: string;
+        name: string;
+        employeeCode: string;
+    };
+    userName: string;
     checkInTime: string;
     checkOutTime: string | null;
-    status: 'on-time' | 'late' | 'early' | 'absent';
+    status: string;
     lateMinutes: number;
     earlyMinutes: number;
     totalHours: string;
     overtimeHours: number;
+    checkInImage: string;
+    checkOutImage: string;
+    userShiftId: {
+        _id: string;
+        name: string;
+        startTime: string;
+        endTime: string;
+    } | null;
+    ipAddress: string;
+    location: string;
 }
 
-interface IState {
-    dateRange: RangePickerProps['value'];
-    attendanceData: IAttendance[];
-    loading: boolean;
-    pagination: TablePaginationConfig;
-    sortField: string;
-    sortOrder: 'ascend' | 'descend';
-}
-
-const MyAttendanceHistory: FC = () => {
-    const [dateRange, setDateRange] = useState<RangePickerProps['value']>(() => {
+const MyAttendanceHistory: React.FC = () => {
+    const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>(() => {
         const today = dayjs();
-        const monday = today.startOf('week').add(1, 'day');
-        const sunday = monday.add(6, 'day');
-        return [monday, sunday] as RangePickerProps['value'];
+        return [today.startOf('month'), today.endOf('month')];
     });
-    const [attendanceData, setAttendanceData] = useState<IAttendance[]>([]);
     const [loading, setLoading] = useState(false);
-    const [pagination, setPagination] = useState<TablePaginationConfig>({
-        current: 1,
-        pageSize: 10,
-        total: 0
-    });
-    const [sortField, setSortField] = useState<string>('checkInTime');
-    const [sortOrder, setSortOrder] = useState<'ascend' | 'descend'>('descend');
+    const tableRef = useRef<ActionType>();
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [selectedRecord, setSelectedRecord] = useState<IAttendance | null>(null);
 
-    const navigate = useNavigate();
-    const isAuthenticated = useAppSelector(state => state.account.isAuthenticated);
+    const columns: ProColumns<IAttendance>[] = [
+        {
+            title: 'Ngày',
+            dataIndex: 'checkInTime',
+            key: 'date',
+            render: (dom, entity) => (
+                <a
+                    style={{ cursor: 'pointer' }}
+                    onClick={e => {
+                        e.stopPropagation();
+                        setSelectedRecord(entity);
+                        setDrawerOpen(true);
+                    }}
+                >
+                    {dayjs(entity.checkInTime).format('DD/MM/YYYY')}
+                </a>
+            ),
+            sorter: true,
+        },
+        {
+            title: 'Giờ check-in',
+            dataIndex: 'checkInTime',
+            key: 'checkInTime',
+            render: (dom, entity) => dayjs(entity.checkInTime).format('HH:mm:ss'),
+            sorter: true,
+        },
+        {
+            title: 'Ảnh check-in',
+            dataIndex: 'checkInImage',
+            key: 'checkInImage',
+            render: (dom, entity) => entity.checkInImage ? <img src={entity.checkInImage} alt="Check-in" width={80} height={80} style={{ objectFit: 'cover' }} /> : '-',
+            hideInSearch: true,
+        },
+        {
+            title: 'Giờ check-out',
+            dataIndex: 'checkOutTime',
+            key: 'checkOutTime',
+            render: (dom, entity) => entity.checkOutTime ? dayjs(entity.checkOutTime).format('HH:mm:ss') : '-',
+            sorter: true,
+        },
+        {
+            title: 'Ảnh check-out',
+            dataIndex: 'checkOutImage',
+            key: 'checkOutImage',
+            render: (dom, entity) => entity.checkOutImage ? <img src={entity.checkOutImage} alt="Check-out" width={80} height={80} style={{ objectFit: 'cover' }} /> : '-',
+            hideInSearch: true,
+        },
+        {
+            title: 'Trạng thái',
+            dataIndex: 'status',
+            key: 'status',
+            render: (dom, entity) => {
+                let color = 'green';
+                if (entity.status === 'late') color = 'orange';
+                if (entity.status === 'absent') color = 'red';
+                if (entity.status === 'early') color = 'blue';
+                return <Tag color={color}>{getStatusText(entity.status)}</Tag>;
+            },
+            sorter: true,
+        },
+        {
+            title: 'Đi muộn',
+            dataIndex: 'lateMinutes',
+            key: 'lateMinutes',
+            render: (dom, entity) => entity.lateMinutes > 0 ? `${entity.lateMinutes} phút` : '-',
+            hideInSearch: true,
+        },
+        {
+            title: 'Về sớm',
+            dataIndex: 'earlyMinutes',
+            key: 'earlyMinutes',
+            render: (dom, entity) => entity.earlyMinutes > 0 ? `${entity.earlyMinutes} phút` : '-',
+            hideInSearch: true,
+        },
+        {
+            title: 'Tổng giờ',
+            dataIndex: 'totalHours',
+            key: 'totalHours',
+            render: (dom, entity) => entity.totalHours || '-',
+            hideInSearch: true,
+        },
+        {
+            title: 'Tăng ca',
+            dataIndex: 'overtimeHours',
+            key: 'overtimeHours',
+            render: (dom, entity) => entity.overtimeHours > 0 ? `${entity.overtimeHours} giờ` : '-',
+            hideInSearch: true,
+        },
+    ];
 
-    useEffect(() => {
-        if (!isAuthenticated) {
-            message.error('Vui lòng đăng nhập để xem lịch sử chấm công');
-            navigate('/face-id-login');
-            return;
-        }
-    }, [isAuthenticated, navigate]);
-
-    const fetchData = async (params: Record<string, any>) => {
+    const request = async (
+        params: {
+            current?: number;
+            pageSize?: number;
+            [key: string]: any;
+        },
+        sort: Record<string, 'ascend' | 'descend' | null>,
+        filter: Record<string, any>
+    ): Promise<Partial<RequestData<IAttendance>>> => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const query: Record<string, any> = {
-                page: params.page,
-                limit: params.limit,
+            if (!dateRange[0] || !dateRange[1]) {
+                setLoading(false);
+                return { data: [], success: true, total: 0 };
+            }
+            const startDate = dateRange[0].startOf('day').format('YYYY-MM-DD');
+            const endDate = dateRange[1].endOf('day').format('YYYY-MM-DD');
+
+            let sortString = '';
+            if (sort) {
+                const sortField = Object.keys(sort)[0];
+                const sortOrder = sort[sortField];
+                if (sortOrder) {
+                    sortString = sortOrder === 'ascend' ? sortField : `-${sortField}`;
+                }
+            }
+
+            const res = await callGetMyAttendance({
+                current: params.current || 1,
+                pageSize: params.pageSize || 10,
+                startDate,
+                endDate,
+                ...(sortString ? { sort: sortString } : {})
+            });
+
+            const mappedData = (res.data?.data?.result || []).map((item: any) => ({
+                ...item,
+                key: item._id,
+                userId: typeof item.userId === 'object' ? item.userId : { _id: '', name: '', employeeCode: '' },
+                userName: item.userName || (item.userId && item.userId.name) || '',
+                userShiftId: item.userShiftId || null,
+            }));
+
+            return {
+                data: mappedData,
+                success: true,
+                total: res.data?.data?.meta?.total || 0
             };
-
-            if (params.startDate && params.endDate) {
-                query.startDate = params.startDate;
-                query.endDate = params.endDate;
-            } else {
-                message.error('Vui lòng chọn khoảng thời gian');
-                return;
-            }
-
-            if (params.sortField) {
-                query.sort = `${params.sortOrder === 'descend' ? '-' : ''}${params.sortField}`;
-            }
-
-            const response = await callGetMyAttendance(queryString.stringify(query));
-
-            const responseData = response?.data?.data;
-            if (responseData?.result && Array.isArray(responseData.result)) {
-
-                const mappedData = responseData.result.map((item: any) => ({
-                    ...item,
-                    key: item._id,
-                }));
-
-                setAttendanceData(mappedData);
-
-                if (responseData.meta) {
-                    setPagination(prev => ({
-                        ...prev,
-                        total: responseData.meta.total || 0,
-                        current: responseData.meta.current || 1,
-                        pageSize: responseData.meta.pageSize || 10
-                    }));
-                }
-
-                if (responseData.result.length === 0) {
-                    message.info('Không có dữ liệu chấm công trong khoảng thời gian này');
-                }
-            } else {
-                message.error('Không thể tải dữ liệu chấm công: Dữ liệu không hợp lệ');
-            }
-        } catch (error: any) {
-            if (error.response?.status === 401) {
-                message.error('Phiên làm việc đã hết hạn, vui lòng đăng nhập lại');
-                navigate('/face-id-login');
-            } else {
-                message.error('Không thể tải dữ liệu chấm công: ' + (error.response?.data?.message || error.message));
-            }
+        } catch (error) {
+            return {
+                data: [],
+                success: false,
+                total: 0
+            };
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        if (isAuthenticated && dateRange?.[0] && dateRange?.[1]) {
-            fetchData({
-                page: 1,
-                limit: 10,
-                startDate: dateRange[0].format('YYYY-MM-DD'),
-                endDate: dateRange[1].format('YYYY-MM-DD')
-            });
-        }
-    }, [dateRange, pagination.current, pagination.pageSize, sortField, sortOrder, isAuthenticated]);
-
-    const handleTableChange = (
-        pagination: TablePaginationConfig,
-        filters: Record<string, FilterValue | null>,
-        sorter: SorterResult<IAttendance> | SorterResult<IAttendance>[],
-        extra: TableCurrentDataSource<IAttendance>
-    ) => {
-        setPagination(pagination);
-        if (Array.isArray(sorter)) {
-            // Handle multiple sorters if needed
-            return;
-        }
-
-        const params = {
-            page: pagination.current,
-            limit: pagination.pageSize,
-            sortField: sorter.field,
-            sortOrder: sorter.order,
-            startDate: dateRange?.[0]?.format('YYYY-MM-DD'),
-            endDate: dateRange?.[1]?.format('YYYY-MM-DD')
-        };
-
-        fetchData(params);
-    };
-
-    const handleDateRangeChange: RangePickerProps['onChange'] = (dates) => {
-        setDateRange(dates);
-        setPagination({ ...pagination, current: 1 });
-    };
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'on-time':
-                return 'success';
-            case 'late':
-                return 'warning';
-            case 'early':
-                return 'warning';
-            case 'absent':
-                return 'error';
-            default:
-                return 'default';
-        }
+    const toolBarRender = () => {
+        return [
+            <Space key="search">
+                <RangePicker
+                    value={dateRange}
+                    onChange={val => val && setDateRange(val as [Dayjs, Dayjs])}
+                    allowClear={false}
+                />
+            </Space>
+        ];
     };
 
     const getStatusText = (status: string) => {
@@ -207,193 +222,30 @@ const MyAttendanceHistory: FC = () => {
         }
     };
 
-    const formatTimeDisplay = (minutes: number): string => {
-        if (!minutes || minutes <= 0) return '-';
-
-        const hours = Math.floor(minutes / 60);
-        const remainingMinutes = minutes % 60;
-
-        if (hours > 0) {
-            if (remainingMinutes > 0) {
-                return `${hours} giờ ${remainingMinutes} phút`;
-            }
-            return `${hours} giờ`;
-        }
-        return `${remainingMinutes} phút`;
-    };
-
-    const formatWorkHours = (hours: string | number): string => {
-        if (!hours) return '-';
-
-        const totalHours = typeof hours === 'string' ? parseFloat(hours) : hours;
-        if (totalHours <= 0) return '-';
-
-        const wholeHours = Math.floor(totalHours);
-        const minutes = Math.round((totalHours - wholeHours) * 60);
-
-        if (wholeHours > 0) {
-            if (minutes > 0) {
-                return `${wholeHours} giờ ${minutes} phút`;
-            }
-            return `${wholeHours} giờ`;
-        }
-        if (minutes > 0) {
-            return `${minutes} phút`;
-        }
-        return '-';
-    };
-
-    const columns = [
-        {
-            title: 'Ngày',
-            dataIndex: 'checkInTime',
-            key: 'date',
-            width: 120,
-            sorter: true,
-            render: (text: string) => dayjs(text).format('DD/MM/YYYY')
-        },
-        {
-            title: 'Giờ vào',
-            dataIndex: 'checkInTime',
-            key: 'checkInTime',
-            width: 100,
-            sorter: true,
-            render: (text: string) => dayjs(text).format('HH:mm:ss')
-        },
-        {
-            title: 'Giờ ra',
-            dataIndex: 'checkOutTime',
-            key: 'checkOutTime',
-            width: 100,
-            sorter: true,
-            render: (text: string) => text ? dayjs(text).format('HH:mm:ss') : '-'
-        },
-        {
-            title: 'Ca làm việc',
-            dataIndex: 'userShiftId',
-            key: 'userShift',
-            width: 200,
-            render: (userShift: IUserShift | null) => {
-                if (!userShift) return '-';
-                const shiftName = userShift.name || userShift.shiftId?.name || 'Ca làm việc';
-                const startTime = userShift.startTime || userShift.shiftId?.startTime || '';
-                const endTime = userShift.endTime || userShift.shiftId?.endTime || '';
-
-                const formatTime = (timeStr: string) => {
-                    if (!timeStr) return '';
-                    // Nếu timeStr đã là định dạng "HH:mm" thì trả về luôn
-                    if (/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(timeStr)) {
-                        return timeStr;
-                    }
-                    // Nếu là timestamp hoặc date string thì parse và format
-                    const parsed = dayjs(timeStr);
-                    return parsed.isValid() ? parsed.format('HH:mm') : '';
-                };
-
-                const formattedStartTime = formatTime(startTime);
-                const formattedEndTime = formatTime(endTime);
-
-                return (
-                    <Text>
-                        {shiftName}
-                        <br />
-                        <Text type="secondary">
-                            {formattedStartTime && formattedEndTime ? `${formattedStartTime} - ${formattedEndTime}` : ''}
-                        </Text>
-                    </Text>
-                );
-            }
-        },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            key: 'status',
-            width: 120,
-            sorter: true,
-            render: (status: string) => (
-                <Tag color={getStatusColor(status)}>
-                    {getStatusText(status)}
-                </Tag>
-            )
-        },
-        {
-            title: 'Đi muộn',
-            dataIndex: 'lateMinutes',
-            key: 'lateMinutes',
-            width: 120,
-            sorter: true,
-            render: (minutes: number) => (
-                <Text type={minutes > 0 ? "warning" : undefined}>
-                    {formatTimeDisplay(minutes)}
-                </Text>
-            )
-        },
-        {
-            title: 'Về sớm',
-            dataIndex: 'earlyMinutes',
-            key: 'earlyMinutes',
-            width: 120,
-            sorter: true,
-            render: (minutes: number) => (
-                <Text type={minutes > 0 ? "warning" : undefined}>
-                    {formatTimeDisplay(minutes)}
-                </Text>
-            )
-        },
-        {
-            title: 'Số giờ làm',
-            dataIndex: 'totalHours',
-            key: 'totalHours',
-            width: 120,
-            sorter: true,
-            render: (hours: string) => (
-                <Text strong>
-                    {formatWorkHours(hours)}
-                </Text>
-            )
-        },
-        {
-            title: 'Tăng ca',
-            dataIndex: 'overtimeHours',
-            key: 'overtimeHours',
-            width: 100,
-            sorter: true,
-            render: (hours: number) => hours > 0 ? (
-                <Text type="success">{hours.toFixed(2)} giờ</Text>
-            ) : '-'
-        }
-    ];
-
     return (
-        <div style={{ padding: '24px' }}>
-            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                <Space style={{ marginBottom: 16 }}>
-                    <DatePicker.RangePicker
-                        value={dateRange}
-                        onChange={handleDateRangeChange}
-                        allowClear={false}
-                    />
-                </Space>
-
-                <Table
-                    columns={columns}
-                    dataSource={attendanceData}
-                    rowKey="_id"
-                    pagination={{
-                        ...pagination,
-                        showSizeChanger: true,
-                        showTotal: (total) => `Tổng số: ${total} bản ghi`,
-                        pageSizeOptions: ['10', '20', '50', '100']
-                    }}
-                    onChange={handleTableChange}
-                    loading={loading}
-                    scroll={{ x: 'max-content' }}
-                    locale={{
-                        emptyText: 'Không có dữ liệu'
-                    }}
-                />
-            </Space>
-        </div>
+        <Card>
+            <ProTable<IAttendance>
+                actionRef={tableRef}
+                headerTitle="Lịch sử chấm công của tôi"
+                rowKey="_id"
+                loading={loading}
+                columns={columns}
+                request={request}
+                search={false}
+                pagination={{
+                    showSizeChanger: true,
+                    showTotal: (total, range) => `${range[0]}-${range[1]} trên ${total} bản ghi`,
+                }}
+                toolBarRender={toolBarRender}
+                scroll={{ x: 'max-content' }}
+            />
+            <ViewDetailAttendance
+                open={drawerOpen}
+                onClose={setDrawerOpen}
+                dataInit={selectedRecord}
+                setDataInit={setSelectedRecord}
+            />
+        </Card>
     );
 };
 

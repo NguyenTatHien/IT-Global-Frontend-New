@@ -115,6 +115,7 @@ const CompanyPage: React.FC = () => {
                 columns={columns}
                 dataSource={companies}
                 loading={isFetching}
+                scroll={{ x: 'max-content' }}
                 pagination={{
                     current: meta.current,
                     pageSize: meta.pageSize,

@@ -212,7 +212,7 @@ const UserPage = () => {
                         const query = buildQuery(params, sort, filter);
                         dispatch(fetchUser({ query }))
                     }}
-                    scroll={{ x: true }}
+                    scroll={{ x: 'max-content' }}
                     pagination={
                         {
                             current: meta.current,
