@@ -93,6 +93,14 @@ const LayoutAdmin = () => {
                 && item.method === ALL_PERMISSIONS.DEPARTMENTS.GET_PAGINATE.method
             )
 
+            const viewAttendance = permissions.find(item =>
+                item.apiPath === ALL_PERMISSIONS.ATTENDANCE.GET_PAGINATE.apiPath
+                && item.method === ALL_PERMISSIONS.ATTENDANCE.GET_PAGINATE.method
+            )
+            const viewMyAttendance = permissions.find(item =>
+                item.apiPath === ALL_PERMISSIONS.ATTENDANCE.GET_MY_ATTENDANCE.apiPath
+                && item.method === ALL_PERMISSIONS.ATTENDANCE.GET_MY_ATTENDANCE.method
+            )
 
             const full = [
                 {
@@ -115,16 +123,31 @@ const LayoutAdmin = () => {
                     key: '/admin/role',
                     icon: <ExceptionOutlined />
                 }] : []),
+                ...(viewCompany ? [{
+                    label: <Link to='/admin/company'>Quản lý công ty</Link>,
+                    key: '/admin/company',
+                    icon: <AppstoreOutlined />
+                }] : []),
+                ...(viewDepartment ? [{
+                    label: <Link to='/admin/department'>Quản lý phòng ban</Link>,
+                    key: '/admin/department',
+                    icon: <TeamOutlined />
+                }] : []),
                 {
                     label: <Link to='/admin/check-in-out'>Chấm công</Link>,
                     key: '/admin/check-in-out',
                     icon: <ClockCircleOutlined />
                 },
-                {
+                ...(viewAttendance ? [{
+                    label: <Link to='/admin/attendance'>Quản lý chấm công</Link>,
+                    key: '/admin/attendance',
+                    icon: <ClockCircleOutlined />
+                }] : []),
+                ...(viewMyAttendance ? [{
                     label: <Link to='/admin/my-attendance-history'>Chấm công của tôi</Link>,
                     key: '/admin/my-attendance-history',
                     icon: <HistoryOutlined />
-                },
+                }] : []),
                 ...(viewShifts ? [{
                     label: <Link to='/admin/shifts'>Quản lý ca làm việc</Link>,
                     key: '/admin/shifts',
@@ -155,16 +178,7 @@ const LayoutAdmin = () => {
                     key: '/admin/reports',
                     icon: <BarChartOutlined />
                 }] : []),
-                ...(viewCompany ? [{
-                    label: <Link to='/admin/company'>Quản lý công ty</Link>,
-                    key: '/admin/company',
-                    icon: <AppstoreOutlined />
-                }] : []),
-                ...(viewDepartment ? [{
-                    label: <Link to='/admin/department'>Quản lý phòng ban</Link>,
-                    key: '/admin/department',
-                    icon: <TeamOutlined />
-                }] : []),
+
             ];
 
             setMenuItems(full);

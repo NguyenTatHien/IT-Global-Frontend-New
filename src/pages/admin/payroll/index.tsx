@@ -210,6 +210,7 @@ const PayrollPage: React.FC = () => {
                 rowKey="_id"
                 loading={loading}
                 locale={{ emptyText: 'Trống' }}
+                scroll={{ x: 'max-content' }}
                 pagination={{
                     current: currentPage,
                     pageSize: pageSize,

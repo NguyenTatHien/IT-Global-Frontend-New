@@ -189,7 +189,7 @@ const RolePage = () => {
                         const query = buildQuery(params, sort, filter);
                         dispatch(fetchRole({ query }))
                     }}
-                    scroll={{ x: true }}
+                    scroll={{ x: 'max-content' }}
                     pagination={
                         {
                             current: meta.current,

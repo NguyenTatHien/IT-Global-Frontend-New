@@ -480,6 +480,7 @@ const UserShiftManagement: React.FC = () => {
                     total: meta?.totalItems || 0,
                 }}
                 toolBarRender={toolBarRender}
+                scroll={{ x: 'max-content' }}
             />
 
             <Modal

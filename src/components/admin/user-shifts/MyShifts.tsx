@@ -94,7 +94,7 @@ const MyShifts: React.FC = () => {
 
         return userShifts.filter(shift => {
             const shiftDate = dayjs(shift.date).startOf('day');
-            return (shiftDate.isSame(startDate, 'day') || shiftDate.isAfter(startDate)) 
+            return (shiftDate.isSame(startDate, 'day') || shiftDate.isAfter(startDate))
                 && (shiftDate.isSame(endDate, 'day') || shiftDate.isBefore(endDate));
         });
     };
@@ -149,6 +149,7 @@ const MyShifts: React.FC = () => {
                     dataSource={getFilteredShifts()}
                     rowKey="_id"
                     loading={loading}
+                    scroll={{ x: 'max-content' }}
                     pagination={{
                         pageSize: 10,
                         showSizeChanger: true,

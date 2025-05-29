@@ -298,7 +298,7 @@ const ShiftManagement: React.FC = () => {
                     },
                 }}
                 request={request}
-                scroll={{ x: true }}
+                scroll={{ x: 'max-content' }}
                 pagination={{
                     current: meta.current,
                     pageSize: meta.pageSize,

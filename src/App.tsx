@@ -33,6 +33,7 @@ import FacePythonTest from 'pages/auth/facepythontest';
 import CompanyPage from './pages/admin/company';
 import DepartmentPage from './pages/admin/department';
 import MyAttendanceHistory from './components/admin/attendance/MyAttendanceHistory';
+import AllAttendanceHistory from './components/admin/attendance/AllAttendanceHistory';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -122,6 +123,13 @@ export default function App() {
             </ProtectedRoute>
         },
         {
+          path: "attendance",
+          element:
+            <ProtectedRoute>
+              <AllAttendanceHistory />
+            </ProtectedRoute>
+        },
+        {
           path: "my-attendance-history",
           element:
             <ProtectedRoute>
@@ -185,7 +193,7 @@ export default function App() {
               <DepartmentPage />
             </ProtectedRoute>
           )
-        }
+        },
       ],
     },
     {

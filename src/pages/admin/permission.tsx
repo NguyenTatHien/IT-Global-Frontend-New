@@ -242,7 +242,7 @@ const PermissionPage = () => {
                         const query = buildQuery(params, sort, filter);
                         dispatch(fetchPermission({ query }))
                     }}
-                    scroll={{ x: true }}
+                    scroll={{ x: 'max-content' }}
                     pagination={
                         {
                             current: meta.current,

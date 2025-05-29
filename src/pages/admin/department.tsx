@@ -101,6 +101,7 @@ const DepartmentPage: React.FC = () => {
                 columns={columns}
                 dataSource={departments}
                 loading={isFetching}
+                scroll={{ x: 'max-content' }}
                 pagination={{
                     current: meta.current,
                     pageSize: meta.pageSize,

@@ -16,7 +16,7 @@ const OPTIMAL_WIDTH = 320; // Giảm kích thước xuống
 const OPTIMAL_HEIGHT = 240;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const JPEG_QUALITY = 0.8; // Giảm chất lượng ảnh để tăng tốc độ
-const FACE_DETECTION_INTERVAL = 200; // Tăng interval để giảm tải
+const FACE_DETECTION_INTERVAL = 1000; // Tăng interval để giảm tải
 const FACE_DETECTION_THRESHOLD = 0.3; // Giảm ngưỡng để phát hiện nhanh hơn
 const FACE_DETECTION_DELAY = 500; // Giảm thời gian chờ
 const FACE_DETECTION_INPUT_SIZE = 320; // Giảm kích thước input để tăng tốc độ
@@ -100,10 +100,7 @@ const FaceIdLogin: React.FC = () => {
 
                 // Tối ưu kích thước ảnh trước khi xử lý
                 const img = await faceapi.fetchImage(imageSrc);
-                const detections = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions({
-                    inputSize: FACE_DETECTION_INPUT_SIZE,
-                    scoreThreshold: FACE_DETECTION_THRESHOLD
-                }));
+                const detections = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions());
 
                 if (detections.length === 1) {
                     setFaceDetected(true);
@@ -136,38 +133,6 @@ const FaceIdLogin: React.FC = () => {
     const handleCameraError = (error: string | DOMException) => {
         console.error('Camera error:', error);
         setCameraError('Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập và thử lại.');
-    };
-
-    const handleCapture = async () => {
-        if (!webcamRef.current || loading) return;
-
-        try {
-            setLoading(true);
-            setError(null);
-            setProcessingProgress(0);
-
-            const imageSrc = webcamRef.current.getScreenshot({
-                width: OPTIMAL_WIDTH,
-                height: OPTIMAL_HEIGHT
-            });
-
-            if (!imageSrc) {
-                throw new Error('Không thể chụp ảnh. Vui lòng thử lại.');
-            }
-
-            setProcessingProgress(30);
-            const optimizedImage = await optimizeImage(imageSrc);
-            setProcessingProgress(60);
-
-            setPreviewImage(optimizedImage);
-            setShowPreview(true);
-            setProcessingProgress(100);
-        } catch (error: any) {
-            console.error('Capture error:', error);
-            setError(error.message || 'Lỗi khi chụp ảnh. Vui lòng thử lại.');
-        } finally {
-            setLoading(false);
-        }
     };
 
     const optimizeImage = async (base64String: string): Promise<string> => {
@@ -279,9 +244,9 @@ const FaceIdLogin: React.FC = () => {
 
             setProcessingProgress(80);
 
-            if (!response.data) {
-                throw new Error('Không nhận được phản hồi từ server');
-            }
+            // if (!response.data) {
+            //     throw new Error('Không nhận được phản hồi từ server');
+            // }
 
             const { access_token, user } = response.data;
 
