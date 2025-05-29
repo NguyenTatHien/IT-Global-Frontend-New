@@ -24,8 +24,8 @@ export default defineConfig(({ command, mode }) => {
       host: "0.0.0.0",
       port: parseInt(env.PORT),
       https: {
-        key: fs.readFileSync(path.resolve(__dirname, './localhost+1-key.pem')),
-        cert: fs.readFileSync(path.resolve(__dirname, './localhost+1.pem')),
+        key: fs.readFileSync(path.resolve(__dirname, './SSL/localhost+1-key.pem')),
+        cert: fs.readFileSync(path.resolve(__dirname, './SSL/localhost+1.pem')),
       }
     },
     resolve: {
