@@ -134,34 +134,32 @@ export interface ISubscribers {
 }
 
 export interface IAttendanceData {
-    data: {
-        meta: {
-            current: number;
-            pageSize: number;
-            total: number;
-        };
-        result: Array<{
+    meta: {
+        current: number;
+        pageSize: number;
+        total: number;
+    };
+    result: Array<{
+        _id: string;
+        userId: Types.ObjectId;
+        checkInTime: string;
+        checkOutTime?: string;
+        status: 'on-time' | 'late' | 'early' | 'absent';
+        totalHours: string;
+        overtimeHours: number;
+        lateMinutes: number;
+        earlyMinutes: number;
+        userShiftId: {
             _id: string;
-            userId: string;
-            checkInTime: string;
-            checkOutTime?: string;
-            status: 'on-time' | 'late' | 'early' | 'absent';
-            totalHours: string;
-            overtimeHours: number;
-            lateMinutes: number;
-            earlyMinutes: number;
-            userShiftId: {
+            name: string;
+            startTime: string;
+            endTime: string;
+            shiftId?: {
                 _id: string;
                 name: string;
                 startTime: string;
                 endTime: string;
-                shiftId?: {
-                    _id: string;
-                    name: string;
-                    startTime: string;
-                    endTime: string;
-                }
-            } | null;
-        }>;
-    };
-} 
+            }
+        } | null;
+    }>;
+};

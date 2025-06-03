@@ -381,7 +381,8 @@ export const callCheckOut = (file: File) => {
 };
 
 export const callGetAllAttendance = (query: { current: number; pageSize: number; startDate: string; endDate: string; search?: string }) => {
-    return axios.get<IBackendRes<IModelPaginate<IAttendanceData>>>(`/api/v1/attendance/all-attendance?${query}`);
+    const qs = queryString.stringify(query);
+    return axios.get<IBackendRes<IModelPaginate<IAttendanceData>>>(`/api/v1/attendance/all-attendance?${qs}`);
 };
 
 export const callGetMyAttendance = (query: { current: number; pageSize: number; startDate: string; endDate: string; sort?: string }) => {
