@@ -322,7 +322,7 @@ const UserShiftManagement: React.FC = () => {
     const columns: ProColumns<IUserShift>[] = [
         {
             title: 'Nhân viên',
-            dataIndex: ['userId', 'name'],
+            dataIndex: 'userId',
             key: 'userId',
             width: 200,
             render: (_, record) => (
@@ -334,7 +334,7 @@ const UserShiftManagement: React.FC = () => {
         },
         {
             title: 'Ca làm việc',
-            dataIndex: ['shiftId', 'name'],
+            dataIndex: 'shiftId',
             key: 'shiftId',
             sorter: true,
             render: (_: any, record: IUserShift) => record.shiftId?.name || '-'

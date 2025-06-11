@@ -17,6 +17,7 @@
     "@ant-design/pro-layout": "7.17.19",
     "@ant-design/pro-table": "^3.19.0",
     "@reduxjs/toolkit": "1.9.3",
+    "@types/moment": "^2.11.29",
     "antd": "5.13.1",
     "apexcharts": "^4.6.0",
     "async-mutex": "0.4.0",
@@ -25,7 +26,10 @@
     "dotenv": "16.0.3",
     "face-api.js": "^0.22.2",
     "html-react-parser": "4.0.0",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
     "lodash": "4.17.21",
+    "moment": "^2.30.1",
     "query-string": "8.1.0",
     "react": "18.2.0",
     "react-apexcharts": "^1.7.0",
@@ -38,7 +42,8 @@
     "react-router-dom": "6.11.2",
     "react-spinners": "0.13.8",
     "react-webcam": "^7.2.0",
-    "uuid": "9.0.0"
+    "uuid": "9.0.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/lodash": "4.14.195",
@@ -47,6 +52,7 @@
     "@types/react-dom": "18.0.11",
     "@types/react-router-dom": "5.3.3",
     "@types/uuid": "9.0.2",
+    "@types/xlsx": "^0.0.35",
     "@vitejs/plugin-react-swc": "3.0.0",
     "rollup-plugin-visualizer": "5.9.0",
     "sass": "1.62.1",

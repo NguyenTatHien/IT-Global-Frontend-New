@@ -61,7 +61,7 @@ const CompanyPage: React.FC = () => {
             render: (text: any) => {
                 try {
                     const addr = JSON.parse(text);
-                    return `${addr.street || ''}, ${addr.ward || ''}, ${addr.district || ''}, ${addr.city || ''}`;
+                    return `${addr.detail || ''}, ${addr.ward || ''}, ${addr.district || ''}, ${addr.city || ''}`;
                 } catch { return text; }
             }
         },

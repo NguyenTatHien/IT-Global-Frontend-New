@@ -7,6 +7,7 @@ import { callDeleteDepartment, callCreateDepartment, callUpdateDepartment } from
 import dayjs from 'dayjs';
 import { Button, message, Space, Popconfirm, Tag } from 'antd';
 import { CheckCircleTwoTone, CloseCircleTwoTone, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import queryString from 'query-string';
 
 interface Department {
     _id: string;
@@ -107,9 +108,38 @@ const DepartmentPage: React.FC = () => {
                     pageSize: meta.pageSize,
                     total: meta.total,
                 }}
+                search={{
+                    labelWidth: 'auto',
+                    defaultCollapsed: true,
+                    layout: 'vertical',
+                    span: {
+                        xs: 24,
+                        sm: 12,
+                        md: 8,
+                        lg: 6,
+                        xl: 6,
+                        xxl: 6
+                    },
+                }}
                 request={async (params: any, sort: any, filter: any) => {
-                    const query = '';
-                    dispatch(fetchDepartment({ query }));
+                    const { current, pageSize, ...rest } = params;
+                    const queryObj: any = {
+                        current,
+                        pageSize,
+                        ...rest,
+                        ...filter,
+                    };
+
+                    if (sort && Object.keys(sort).length > 0) {
+                        const sortField = Object.keys(sort)[0];
+                        const sortOrder = sort[sortField];
+                        if (sortOrder) {
+                            queryObj.sort = sortOrder === 'ascend' ? sortField : `-${sortField}`;
+                        }
+                    }
+
+                    const query = queryString.stringify(queryObj);
+                    await dispatch(fetchDepartment({ query }));
                 }}
                 toolBarRender={() => (
                     <Button type="primary" onClick={handleAdd}>Thêm mới</Button>

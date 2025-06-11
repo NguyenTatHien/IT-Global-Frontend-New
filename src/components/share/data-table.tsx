@@ -13,6 +13,7 @@ interface DataTableProps<T> {
     rowSelection?: any;
     toolBarRender?: any;
     scroll?: any;
+    search?: any;
 }
 
 const DataTable = <T extends Record<string, any>>(props: DataTableProps<T>) => {

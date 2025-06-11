@@ -27,13 +27,14 @@ import { ConfigProvider } from 'antd';
 import vi from 'antd/locale/vi_VN';
 import MyShifts from './components/admin/user-shifts/MyShifts';
 import Profile from './pages/admin/profile';
-import LeaveRequestPage from './pages/admin/leave-request';
-import PayrollPage from './pages/admin/payroll';
+import RequestsPage from './pages/admin/requests';
+import PayrollPage from './pages/admin/salary';
 import FacePythonTest from 'pages/auth/facepythontest';
 import CompanyPage from './pages/admin/company';
 import DepartmentPage from './pages/admin/department';
 import MyAttendanceHistory from './components/admin/attendance/MyAttendanceHistory';
 import AllAttendanceHistory from './components/admin/attendance/AllAttendanceHistory';
+import SalaryPage from './pages/admin/salary';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -165,17 +166,17 @@ export default function App() {
             </ProtectedRoute>
         },
         {
-          path: "leave-request",
+          path: "requests",
           element:
             <ProtectedRoute>
-              <LeaveRequestPage />
+              <RequestsPage />
             </ProtectedRoute>
         },
         {
-          path: "payroll",
+          path: "salaries",
           element:
             <ProtectedRoute>
-              <PayrollPage />
+              <SalaryPage />
             </ProtectedRoute>
         },
         {

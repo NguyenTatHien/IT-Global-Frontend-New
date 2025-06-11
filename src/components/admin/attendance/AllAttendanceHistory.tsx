@@ -9,6 +9,7 @@ import type { ActionType, ProColumns, RequestData } from '@ant-design/pro-compon
 import { SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 import FaceAttendanceImage from './attendance.image';
 import ViewDetailAttendance from './ViewDetailAttendance';
+import queryString from 'query-string';
 
 const { RangePicker } = DatePicker;
 const { Text } = Typography;
@@ -81,8 +82,8 @@ const AllAttendanceHistory: React.FC = () => {
         },
         {
             title: 'Tên nhân viên',
-            dataIndex: 'userId',
-            key: 'userId',
+            dataIndex: 'userName',
+            key: 'userName',
             render: (dom, entity) => <Text strong>{entity.userId?.name}</Text>,
             sorter: true,
         },
@@ -92,6 +93,7 @@ const AllAttendanceHistory: React.FC = () => {
             key: 'date',
             render: (dom, entity) => dayjs(entity.checkInTime).format('DD/MM/YYYY'),
             sorter: true,
+            hideInSearch: true,
         },
         {
             title: 'Ảnh check-in',
@@ -119,67 +121,40 @@ const AllAttendanceHistory: React.FC = () => {
                 return <Tag color={color}>{getStatusText(entity.status)}</Tag>;
             },
             sorter: true,
+            hideInSearch: true,
         },
     ];
 
     const request = async (
-        params: {
-            current?: number;
-            pageSize?: number;
-            keyword?: string;
-            [key: string]: any;
-        },
+        params: any,
         sort: Record<string, 'ascend' | 'descend' | null>,
         filter: Record<string, any>
     ): Promise<Partial<RequestData<IAttendance>>> => {
         setLoading(true);
         try {
-            const startDate = dateRange[0].startOf('day').toISOString();
-            const endDate = dateRange[1].endOf('day').toISOString();
+            const { current, pageSize, ...rest } = params;
+            const queryObj: any = {
+                current,
+                pageSize,
+                ...rest,
+                ...filter,
+                startDate: dateRange[0].startOf('day').format('YYYY-MM-DD'),
+                endDate: dateRange[1].endOf('day').format('YYYY-MM-DD'),
+            };
 
-            // Build sort string
-            let sortString = '';
-            if (sort) {
+            if (sort && Object.keys(sort).length > 0) {
                 const sortField = Object.keys(sort)[0];
                 const sortOrder = sort[sortField];
                 if (sortOrder) {
-                    sortString = sortOrder === 'ascend' ? sortField : `-${sortField}`;
+                    queryObj.sort = sortOrder === 'ascend' ? sortField : `-${sortField}`;
                 }
             }
 
-            const queryParams = new URLSearchParams({
-                current: (params.current || 1).toString(),
-                pageSize: (params.pageSize || 10).toString(),
-                startDate,
-                endDate,
-                ...(params.userName || search ? { search: params.userName || search } : {}),
-                ...(sortString ? { sort: sortString } : {})
-            });
-
-            const res = await callGetAllAttendance({
-                current: Number(queryParams.get('current')),
-                pageSize: Number(queryParams.get('pageSize')),
-                startDate: queryParams.get('startDate') || '',
-                endDate: queryParams.get('endDate') || '',
-                search: queryParams.get('search') || undefined
-            });
+            const res = await callGetAllAttendance(queryObj);
 
             const mappedData = (res.data?.result || []).map((item: any) => ({
-                _id: item._id,
-                userId: item.userId,
+                ...item,
                 userName: item.userName || (item.user && item.user.name) || '',
-                checkInTime: item.checkInTime,
-                checkOutTime: item.checkOutTime,
-                status: item.status,
-                lateMinutes: item.lateMinutes,
-                earlyMinutes: item.earlyMinutes,
-                totalHours: item.totalHours,
-                overtimeHours: item.overtimeHours,
-                checkInImage: item.checkInImage,
-                checkOutImage: item.checkOutImage,
-                userShiftId: item.userShiftId || null,
-                ipAddress: item.ipAddress,
-                location: item.location
             }));
 
             return {
@@ -203,7 +178,14 @@ const AllAttendanceHistory: React.FC = () => {
             <Space key="search">
                 <RangePicker
                     value={dateRange}
-                    onChange={val => val && setDateRange(val as [Dayjs, Dayjs])}
+                    onChange={val => {
+                        if (val) {
+                            setDateRange(val as [Dayjs, Dayjs]);
+                            setTimeout(() => {
+                                tableRef.current?.reload();
+                            }, 0);
+                        }
+                    }}
                     allowClear={false}
                 />
             </Space>

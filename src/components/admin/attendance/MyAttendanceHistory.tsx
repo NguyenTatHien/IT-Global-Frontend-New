@@ -5,6 +5,7 @@ import { ProTable } from '@ant-design/pro-components';
 import type { ActionType, ProColumns, RequestData } from '@ant-design/pro-components';
 import { callGetMyAttendance } from '@/config/api';
 import ViewDetailAttendance from './ViewDetailAttendance';
+import FaceAttendanceImage from './attendance.image';
 
 const { RangePicker } = DatePicker;
 const { Text } = Typography;
@@ -76,7 +77,7 @@ const MyAttendanceHistory: React.FC = () => {
             title: 'Ảnh check-in',
             dataIndex: 'checkInImage',
             key: 'checkInImage',
-            render: (dom, entity) => entity.checkInImage ? <img src={entity.checkInImage} alt="Check-in" width={80} height={80} style={{ objectFit: 'cover' }} /> : '-',
+            render: (dom, entity) => entity.checkInImage ? <FaceAttendanceImage attendanceId={entity._id} type="check-in" width={80} height={80} /> : '-',
             hideInSearch: true,
         },
         {
@@ -90,7 +91,7 @@ const MyAttendanceHistory: React.FC = () => {
             title: 'Ảnh check-out',
             dataIndex: 'checkOutImage',
             key: 'checkOutImage',
-            render: (dom, entity) => entity.checkOutImage ? <img src={entity.checkOutImage} alt="Check-out" width={80} height={80} style={{ objectFit: 'cover' }} /> : '-',
+            render: (dom, entity) => entity.checkOutImage ? <FaceAttendanceImage attendanceId={entity._id} type="check-out" width={80} height={80} /> : '-',
             hideInSearch: true,
         },
         {
@@ -171,7 +172,7 @@ const MyAttendanceHistory: React.FC = () => {
                 ...(sortString ? { sort: sortString } : {})
             });
 
-            const mappedData = (res.data?.data?.result || []).map((item: any) => ({
+            const mappedData = (res.data?.result || []).map((item: any) => ({
                 ...item,
                 key: item._id,
                 userId: typeof item.userId === 'object' ? item.userId : { _id: '', name: '', employeeCode: '' },
@@ -182,7 +183,7 @@ const MyAttendanceHistory: React.FC = () => {
             return {
                 data: mappedData,
                 success: true,
-                total: res.data?.data?.meta?.total || 0
+                total: res.data?.meta?.total || 0
             };
         } catch (error) {
             return {
@@ -200,7 +201,14 @@ const MyAttendanceHistory: React.FC = () => {
             <Space key="search">
                 <RangePicker
                     value={dateRange}
-                    onChange={val => val && setDateRange(val as [Dayjs, Dayjs])}
+                    onChange={val => {
+                        if (val) {
+                            setDateRange(val as [Dayjs, Dayjs]);
+                            setTimeout(() => {
+                                tableRef.current?.reload();
+                            }, 0);
+                        }
+                    }}
                     allowClear={false}
                 />
             </Space>

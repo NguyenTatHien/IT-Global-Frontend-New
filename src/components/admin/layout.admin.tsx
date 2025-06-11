@@ -73,14 +73,14 @@ const LayoutAdmin = () => {
                 && item.method === ALL_PERMISSIONS.REPORTS.GET_PAGINATE.method
             )
 
-            const viewLeaveRequest = permissions.find(item =>
-                item.apiPath === ALL_PERMISSIONS.LEAVE_REQUESTS.GET_PAGINATE.apiPath
-                && item.method === ALL_PERMISSIONS.LEAVE_REQUESTS.GET_PAGINATE.method
+            const viewRequests = permissions.find(item =>
+                item.apiPath === ALL_PERMISSIONS.REQUESTS.GET_REMOTE_WORK_PAGINATE.apiPath
+                && item.method === ALL_PERMISSIONS.REQUESTS.GET_REMOTE_WORK_PAGINATE.method
             )
 
-            const viewPayroll = permissions.find(item =>
-                item.apiPath === ALL_PERMISSIONS.PAYROLL.GET_PAGINATE.apiPath
-                && item.method === ALL_PERMISSIONS.PAYROLL.GET_PAGINATE.method
+            const viewSalaries = permissions.find(item =>
+                item.apiPath === ALL_PERMISSIONS.SALARIES.GET_PAGINATE.apiPath
+                && item.method === ALL_PERMISSIONS.SALARIES.GET_PAGINATE.method
             )
 
             const viewCompany = permissions.find(item =>
@@ -163,14 +163,14 @@ const LayoutAdmin = () => {
                     key: '/admin/my-shifts',
                     icon: <CalendarOutlined />
                 },
-                ...(viewLeaveRequest ? [{
-                    label: <Link to='/admin/leave-request'>Đơn xin nghỉ phép</Link>,
-                    key: '/admin/leave-request',
+                ...(viewRequests ? [{
+                    label: <Link to='/admin/requests'>Quản lý đơn từ</Link>,
+                    key: '/admin/requests',
                     icon: <CalendarOutlined />
                 }] : []),
-                ...(viewPayroll ? [{
-                    label: <Link to='/admin/payroll'>Bảng lương</Link>,
-                    key: '/admin/payroll',
+                ...(viewSalaries ? [{
+                    label: <Link to='/admin/salaries'>Bảng lương</Link>,
+                    key: '/admin/salaries',
                     icon: <DollarOutlined />
                 }] : []),
                 ...(viewReport ? [{

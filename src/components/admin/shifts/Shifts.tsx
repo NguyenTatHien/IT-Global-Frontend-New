@@ -179,21 +179,25 @@ const ShiftManagement: React.FC = () => {
         {
             title: 'Tên ca',
             dataIndex: 'name',
+            key: 'name',
             sorter: true,
         },
         {
             title: 'Giờ bắt đầu',
             dataIndex: 'startTime',
+            key: 'startTime',
             sorter: true,
         },
         {
             title: 'Giờ kết thúc',
             dataIndex: 'endTime',
+            key: 'endTime',
             sorter: true,
         },
         {
             title: 'Trạng thái',
             dataIndex: 'status',
+            key: 'status',
             sorter: true,
             render: (dom: any, entity: IShift) => (
                 <Tag color={getStatusColor(entity.status)}>
@@ -286,7 +290,7 @@ const ShiftManagement: React.FC = () => {
                 dataSource={shifts}
                 search={{
                     labelWidth: 'auto',
-                    defaultCollapsed: false,
+                    defaultCollapsed: true,
                     layout: 'vertical',
                     span: {
                         xs: 24,
