@@ -152,6 +152,11 @@ export const callScanFace = async (formData: FormData) => {
     return response;
 };
 
+export const callDeleteUploadFile = async (fileName: string) => {
+    const response = await axios.delete('/api/v1/files/delete', { data: { fileName } });
+    return response;
+};
+
 export const callFetchAccount = () => {
     return axios.get<IBackendRes<IGetAccount>>('/api/v1/auth/account')
 }
@@ -421,49 +426,6 @@ export const callGenerateReport = (data: {
 }
 
 /**
- * Module Leave Requests
- */
-export const callCreateLeaveRequest = (data: {
-    startDate: string;
-    endDate: string;
-    reason: string;
-    type: 'sick' | 'annual' | 'personal';
-    attachments?: File[];
-}) => {
-    const formData = new FormData();
-    formData.append('startDate', data.startDate);
-    formData.append('endDate', data.endDate);
-    formData.append('reason', data.reason);
-    formData.append('type', data.type);
-    if (data.attachments) {
-        data.attachments.forEach(file => {
-            formData.append('attachments', file);
-        });
-    }
-
-    return axios.post<IBackendRes<any>>('/api/v1/leave-requests', formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data'
-        }
-    });
-}
-
-export const callGetLeaveRequests = (query: string = '') => {
-    return axios.get<IBackendRes<IModelPaginate<any>>>(`/api/v1/leave-requests?${query}`);
-}
-
-export const callGetMyLeaveRequests = (query: string = '') => {
-    return axios.get<IBackendRes<IModelPaginate<any>>>(`/api/v1/leave-requests/my-requests?${query}`);
-}
-
-export const callUpdateLeaveRequest = (id: string, data: {
-    status: 'approved' | 'rejected';
-    comment?: string;
-}) => {
-    return axios.patch<IBackendRes<any>>(`/api/v1/leave-requests/${id}`, data);
-}
-
-/**
  * Module Payroll
  */
 export const callGetPayroll = (query: string = '') => {
@@ -514,3 +476,66 @@ export const callDeleteDepartment = (id: string) => {
     return axios.delete(`/api/v1/departments/${id}`);
 };
 
+/**
+ * Module Requests
+ */
+export const callGetRemoteWorkRequests = (query: string = '') => {
+    return axios.get<IBackendRes<IModelPaginate<any>>>(`/api/v1/requests/remote-work?${query}`);
+}
+
+export const callCreateRemoteWorkRequest = (data: any) => {
+    return axios.post('/api/v1/requests/remote-work', data);
+}
+
+export const callUpdateRemoteWorkRequest = (id: string, data: any) => {
+    return axios.patch(`/api/v1/requests/remote-work/${id}`, data);
+}
+
+export const callDeleteRemoteWorkRequest = (id: string) => {
+    return axios.delete(`/api/v1/requests/remote-work/${id}`);
+}
+
+export const callGetLeaveRequests = (query: string) => {
+    return axios.get(`/api/v1/requests/leave?${query}`);
+}
+
+export const callCreateLeaveRequest = (data: any) => {
+    return axios.post('/api/v1/requests/leave', data);
+}
+
+export const callUpdateLeaveRequest = (id: string, data: any) => {
+    return axios.patch(`/api/v1/requests/leave/${id}`, data);
+}
+
+export const callDeleteLeaveRequest = (id: string) => {
+    return axios.delete(`/api/v1/requests/leave/${id}`);
+}
+
+// Salary APIs
+export const callGetSalary = (params: any) => {
+    return axios.get('/api/v1/salary', { params });
+};
+
+export const callGetMySalary = (params: any) => {
+    return axios.get('/api/v1/salary/my-salary', { params });
+};
+
+export const callCreateSalary = (data: any) => {
+    return axios.post('/api/v1/salary', data);
+};
+
+export const callCreateSalaryForAll = (month: number, year: number) => {
+    return axios.post('/api/v1/salary/all', { month, year });
+};
+
+export const callUpdateSalary = (id: string, data: any) => {
+    return axios.patch(`/api/v1/salary/${id}`, data);
+};
+
+export const callUpdateSalaryStatus = (id: string, data: any) => {
+    return axios.patch(`/api/v1/salary/${id}/status`, data);
+};
+
+export const callDeleteSalary = (id: string) => {
+    return axios.delete(`/api/v1/salary/${id}`);
+};

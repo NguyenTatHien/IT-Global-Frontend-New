@@ -16,10 +16,8 @@ const OPTIMAL_WIDTH = 320; // Giảm kích thước xuống
 const OPTIMAL_HEIGHT = 240;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const JPEG_QUALITY = 0.8; // Giảm chất lượng ảnh để tăng tốc độ
-const FACE_DETECTION_INTERVAL = 1000; // Tăng interval để giảm tải
-const FACE_DETECTION_THRESHOLD = 0.3; // Giảm ngưỡng để phát hiện nhanh hơn
-const FACE_DETECTION_DELAY = 500; // Giảm thời gian chờ
-const FACE_DETECTION_INPUT_SIZE = 320; // Giảm kích thước input để tăng tốc độ
+const FACE_DETECTION_INTERVAL = 500; // Tăng interval để giảm tải
+const FACE_DETECTION_DELAY = 300; // Giảm thời gian chờ
 
 const FaceIdLogin: React.FC = () => {
     const [loading, setLoading] = useState(false);
@@ -89,26 +87,17 @@ const FaceIdLogin: React.FC = () => {
         detectionInterval.current = setInterval(async () => {
             if (!webcamRef.current || loading) return;
 
-            // Kiểm tra thời gian giữa các lần phát hiện
-            const now = Date.now();
-            if (now - lastDetectionTime < FACE_DETECTION_INTERVAL) return;
-            setLastDetectionTime(now);
-
             try {
-                const imageSrc = webcamRef.current.getScreenshot();
-                if (!imageSrc) return;
+                const video = webcamRef.current.video;
+                if (!video) return;
 
-                // Tối ưu kích thước ảnh trước khi xử lý
-                const img = await faceapi.fetchImage(imageSrc);
-                const detections = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions());
+                const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
 
                 if (detections.length === 1) {
                     setFaceDetected(true);
                     detectionCount.current++;
 
-                    // Chỉ đăng nhập sau khi phát hiện khuôn mặt ổn định
-                    if (detectionCount.current >= 2 && !loginTimeout.current) {
-                        // Dừng interval để không gửi nhiều request
+                    if (detectionCount.current >= 1 && !loginTimeout.current) {
                         if (detectionInterval.current) {
                             clearInterval(detectionInterval.current);
                         }
@@ -213,7 +202,6 @@ const FaceIdLogin: React.FC = () => {
 
         try {
             const imageSrc = webcamRef.current.getScreenshot();
-
             if (!imageSrc) {
                 throw new Error('Không thể chụp ảnh. Vui lòng thử lại.');
             }

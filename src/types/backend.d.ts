@@ -163,3 +163,36 @@ export interface IAttendanceData {
         } | null;
     }>;
 };
+
+export interface IRemoteWorkRequest {
+    _id: string;
+    employee: {
+        _id: string;
+        name: string;
+    };
+    startDate: string;
+    endDate: string;
+    location: string;
+    reason: string;
+    workPlan: string;
+    status: string;
+}
+
+export interface ILeaveRequest {
+    _id: string;
+    employee: {
+        _id: string;
+        name: string;
+        employeeCode: string;
+    };
+    startDate: string;
+    endDate: string;
+    leaveType: string;
+    reason: string;
+    status: string;
+    approvedBy?: {
+        _id: string;
+        name: string;
+    };
+    approvedAt: string;
+}

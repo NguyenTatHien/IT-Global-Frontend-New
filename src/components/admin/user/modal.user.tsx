@@ -2,7 +2,7 @@ import { FooterToolbar, ModalForm, ProForm, ProFormDigit, ProFormSelect, ProForm
 import { Col, Form, Row, Upload, Button, message, notification, Modal, ConfigProvider, Progress, Space } from "antd";
 import { isMobile } from "react-device-detect";
 import { useState, useEffect, useRef } from "react";
-import { callCreateUser, callFetchRole, callScanFace, callUpdateUser, callUploadSingleFile, callGetDepartments, callGetMyFace } from "@/config/api";
+import { callCreateUser, callFetchRole, callScanFace, callUpdateUser, callUploadSingleFile, callGetDepartments, callGetMyFace, callDeleteUploadFile } from "@/config/api";
 import { IUser } from "@/types/backend";
 import { DebounceSelect } from "./debouce.select";
 import Webcam from "react-webcam";
@@ -151,6 +151,7 @@ const ModalUser = (props: IProps) => {
                 url: "",
                 originFileObj: file,
             }]);
+            await callDeleteUploadFile(uploadRes.data.fileName);
             setFaceDescriptor(scanRes.data);
             setProgress(100);
             message.success("Xử lý ảnh khuôn mặt thành công!");
